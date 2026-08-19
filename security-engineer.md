@@ -1,6 +1,7 @@
 ---
 description: Security engineer for vulnerability assessment, secure code review, and dependency auditing. Performs threat modeling and security hardening.
 mode: subagent
+model: opencode/deepseek-v4-flash-free
 color: error
 permission:
   edit: allow

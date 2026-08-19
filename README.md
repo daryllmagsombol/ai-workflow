@@ -1,3 +1,9 @@
+---
+name: readme
+description: Disabled - documentation file, not an agent.
+disable: true
+---
+
 # OpenCode AI Agents
 
 > ⚠️ **Experimental:** I'm currently exploring and experimenting with custom agents and their orchestration to shape my AI-assisted coding workflow. Things will evolve!

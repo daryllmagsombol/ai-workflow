@@ -1,6 +1,7 @@
 ---
 description: QA engineer focused on testing, code quality, and bug detection. Writes and runs tests, reviews code, analyzes coverage, and validates fixes.
 mode: subagent
+model: opencode/deepseek-v4-flash-free
 color: success
 permission:
   edit: allow
