@@ -1,198 +1,130 @@
----
-name: readme
-description: Disabled - documentation file, not an agent.
-disable: true
----
+# AI-Assisted Coding Workflow
 
-# OpenCode AI Agents
+This repo documents my AI-assisted software development workflow, built on the [OpenCode](https://opencode.ai) CLI. It covers the orchestration layer, context and memory tooling, design-to-code pipelines, planning skills, and quality gates.
 
-> ⚠️ **Experimental:** I'm currently exploring and experimenting with custom agents and their orchestration to shape my AI-assisted coding workflow. Things will evolve!
-
-My custom agents and subagents for [OpenCode](https://opencode.ai) — an AI-powered CLI coding assistant. This repo defines a **Team Leader** orchestration pattern with specialized subagents for software development workflows.
+The architecture has evolved — the v1 "Team Leader" agent pattern is archived in [`old-agents/README.md`](old-agents/README.md) as the previous architecture; this README describes the current setup.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    User["User Request"] --> TeamLeader["Team Leader (primary)"]
+    User["User Request"] --> OC["OpenCode CLI"]
+    OC --> OMO["oh-my-opencode-slim<br/>Orchestrator"]
 
-    subgraph Brainstorming["Planning Phase (Heavy AI: GLM 5.2 / Kimi 2.7 Code)"]
-        BS["/brainstorming with superpowers"]
+    subgraph Planning["Planning Phase"]
+        SP["Superpowers<br/>/brainstorming"] -->|"spec + plan"| OMO
     end
 
-    subgraph Execution["Execution Phase (Efficient AI: Deepseek Pro V4 / Qwen Code 3.7 Plus)"]
-        TL["Team Leader<br/>Orchestrates & delegates"]
-        QA["@qa<br/>Bugs & code quality"]
-        SEC["@security-engineer<br/>Vulnerability checks"]
-        PM["@project-manager<br/>Task planning (AI effort)"]
-        UI["@ui-ux-designer<br/>Design systems & enhancements"]
+    subgraph Specialists["Specialist Agents (background delegation)"]
+        EXP["explorer — codebase recon"]
+        LIB["librarian — docs & research"]
+        ORA["oracle — architecture & review"]
+        DES["designer — UI/UX"]
+        FIX["fixer — implementation"]
     end
 
-    subgraph Simple["Simple Tasks (Deepseek v4 Flash Free)"]
-        TL2["Team Leader handles inline"]
+    OMO -->|"delegates"| Specialists
+
+    subgraph Context["Context Providers"]
+        SER["Serena — symbol index & memories"]
+        C7["context7 — library docs"]
     end
 
-    User --> BS
-    BS -->|"Clarified requirements"| TL
-    TL -->|"Dev tasks"| TL
-    TL -->|"Bugs"| QA
-    TL -->|"Security audit"| SEC
-    TL -->|"Planning"| PM
-    TL -->|"UI/UX"| UI
-    TL -.->|"Trivial tasks"| Simple
+    LIB --> C7
+    OMO --> SER
+
+    subgraph Design["Design-to-Code Pipeline"]
+        FIG["Figma"] --> FW["Figwright MCP"]
+        ST["Google Stitch"] --> SM["Stitch MCP"]
+        FW -->|"design tokens → code"| FIX
+        SM -->|"design → code"| FIX
+    end
+
+    subgraph Quality["Quality Gates"]
+        SQ["Self-hosted SonarQube"] --> GH["GitHub Actions"]
+    end
+
+    FIX -->|"pull request"| GH
+    GH -->|"quality gate"| DONE["Verified & merged"]
 ```
 
-## Workflow
+## Core Stack
 
-### Planning Phase (Feature Builds)
-1. User runs `/brainstorming` with **superpowers** enabled
-2. Brainstorming clarifies intent, requirements, and architectural decisions
-3. **Heavy AI models** used here: **GLM 5.2** or **Kimi 2.7 Code**
-4. Once requirements are clear, planning is handed off to Team Leader
+| Tool | Purpose | Role in the flow |
+|------|---------|------------------|
+| **OpenCode CLI** | Terminal AI coding assistant | Hosts agents, skills, MCPs, and providers |
+| **oh-my-opencode-slim** | Agent orchestration plugin for OpenCode | Routes tasks to specialist agents; runs on the `opencode-go` preset |
+| **Superpowers** | Skills suite (planning, TDD, debugging, review) | `/brainstorming` and related skills for feature work and complex tasks |
+| **Serena** (MCP) | Project symbol index + persistent memories | Agents understand a repo without reading everything; `.serena/` per project |
+| **Stitch MCP** | Google Stitch design tool | Translates designs in Stitch into code |
+| **Figwright MCP** | Figma design tool bridge | Translates Figma designs into code; design-system-aware |
+| **context7** (MCP) | Version-specific library documentation | Injects current docs into the context window at query time |
+| **SonarQube** (self-hosted) | Code quality & security analysis | Quality gate via GitHub Actions on pull requests |
 
-### Execution Phase
-1. **Team Leader** receives the clarified requirements
-2. Delegates work to the most efficient subagent(s) for each task
-3. **Superpowers skills are NOT used** during execution (token efficiency)
-4. **Efficient AI models** used here: **Deepseek Pro V4** or **Qwen Code 3.7 Plus**
-5. Team Leader reviews and integrates results
+> **Also in my stack (not covered in detail here):** `rtk` (token-optimizing bash proxy/plugin), `headroom` (local model proxy), `9router` (local model gateway), `oMLX` (local MLX provider), `graphify` (knowledge-graph skill), `azure-*` skills, and a per-project `aws` MCP.
 
-### Dev Tasks (Implementation)
-- **Team Leader directly writes and creates the code** — no subagent delegation needed for straightforward development
-- Uses **Deepseek Pro V4** or **Qwen Code 3.7 Plus** for efficient generation
-- Covers: implementing features, writing business logic, creating APIs, building components, etc.
-- Team Leader acts as the primary developer, only calling subagents when specialized input is required
+## The End-to-End Flow
 
-### Non-Feature / Maintenance Work
-- **@qa** — Bug detection, code quality reviews, test improvements
-- **@security-engineer** — Vulnerability scanning, dependency audits, secure code review
-- **@ui-ux-designer** — Design systems, UI enhancements, accessibility audits, responsive layouts
+How a feature goes from request to merged code:
 
-### Simple / Trivial Tasks
-- Handled directly by **Deepseek v4 Flash Free** to conserve token budget
-- No subagent delegation needed
+1. **Request** — a task comes in through OpenCode (direct or via a skill invocation).
+2. **Plan** — for feature work, `/brainstorming` (superpowers) clarifies intent, requirements, and architecture into a spec. For straightforward changes, planning is lighter.
+3. **Delegate** — the orchestrator routes work to specialists, dispatching independent lanes in the background and tracking task ownership.
+4. **Execute** — specialists do the work: explorer scouts code, librarian fetches docs, designer handles UI/UX, fixer implements bounded tasks.
+5. **Reconcile** — the orchestrator merges specialist outputs, resolves conflicts, and gates dependent lanes.
+6. **Verify** — quality gates run (SonarQube via GitHub Actions); the orchestrator confirms the work meets requirements.
+7. **Report** — a summary of what was done, what's pending, and any blockers.
 
-## Model Strategy
+## Orchestration
 
-| Phase | Models Used | Rationale |
-|-------|-------------|-----------|
-| **Planning / Brainstorming** | GLM 5.2, Kimi 2.7 Code | Heavy reasoning, deep architectural thinking |
-| **Execution** | Deepseek Pro V4, Qwen Code 3.7 Plus | Efficient code generation without token bloat |
-| **Simple Tasks** | Deepseek v4 Flash Free | Minimal cost, fast turnaround |
-| **Superpowers Skills** | Planning only | Too expensive for execution; disabled during implementation |
+[oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim) provides the agent roster under a central **orchestrator** that plans, delegates, and reconciles instead of doing all the work itself.
 
-## Cost & Limits (OpenCode Go)
+| Agent | Role |
+|-------|------|
+| **orchestrator** | Default lead; plans the dependency graph, dispatches background specialists, reconciles results |
+| **explorer** | Fast codebase reconnaissance — locates files, symbols, and patterns |
+| **librarian** | External knowledge — library docs, API references, GitHub examples (uses context7 + gh_grep) |
+| **oracle** | Strategic advisor — architecture, complex debugging, code review |
+| **designer** | UI/UX design and implementation |
+| **fixer** | Bounded implementation — executes well-scoped tasks |
+| **observer** | Visual analysis of images/PDFs/screenshots (read-only) |
 
-**💵 $5 first month → $10/month after. No other fees. That's it.** — OpenCode Go is the underlying subscription powering these agents, with zero hidden costs, no per-request overage, and no surprise bills.
+Agents can be invoked directly with `@agentName <task>`. Model routing is handled by presets — the current preset is **`opencode-go`**, backed by the [OpenCode Go](https://opencode.ai/docs/go/) subscription (flat $10/month, usage caps of $12/5h, $30/week, $60/month).
 
-### Usage Limits by Period
+## Planning & Skills
 
-| Period | Usage Cap |
-|--------|-----------|
-| 5 hours | $12 |
-| Weekly | $30 |
-| Monthly | $60 |
+- **Superpowers** — the skill suite used for feature work and complex tasks:
+  - `/brainstorming` — requirement clarification and design before implementation
+  - `writing-plans` / `executing-plans` — spec-driven, review-gated implementation
+  - `test-driven-development`, `systematic-debugging`, `requesting/receiving-code-review`, `verification-before-completion`, and more
+- **oh-my-opencode-slim skills** — `codemap`, `deepwork`, `simplify`, `verification-planning`, `worktrees`, `clonedeps`, `reflect`
 
-### Estimated Requests Per Model
+## Design-to-Code Pipeline
 
-Based on observed average usage patterns across Go subscribers.
+Designs are translated to code through MCP bridges, with design systems kept authoritative:
 
-| Model | Reqs / 5h | Reqs / Week | Reqs / Month | Cost / Session |
-|-------|-----------|-------------|--------------|----------------|
-| **GLM-5.2** (Planning) | 880 | 2,150 | 4,300 | $2.34 |
-| **Kimi K2.7 Code** (Planning) | 1,350 | 4,630 | 9,250 | $1.03 |
-| **DeepSeek V4 Pro** (Execution) | 3,450 | 8,550 | 17,150 | $0.65 |
-| **Qwen3.7 Plus** (Execution) | 4,300 | 10,800 | 21,600 | $0.59 |
-| **DeepSeek V4 Flash** (Simple tasks) | 31,650 | 79,050 | 158,150 | $0.08 |
-| **MiMo-V2.5** (Budget) | 30,100 | 75,200 | 150,400 | $0.04 |
+- **Figma → Figwright MCP** — the Figwright bridge grounds generated code in the Figma file's actual design system: components, tokens, and icons are mapped to existing project code before anything is generated. Design systems are authored for AI to follow.
+- **Google Stitch → Stitch MCP** — Stitch designs are translated into code via the Stitch MCP server, including design-system application across screens.
 
-### Token Pricing (per 1M tokens)
+Both pipelines reuse the project's existing components and tokens rather than regenerating them.
 
-| Model | Input | Output | Cached Read |
-|-------|-------|--------|-------------|
-| **GLM-5.2** | $1.40 | $4.40 | $0.26 |
-| **Kimi K2.7 Code** | $0.95 | $4.00 | $0.19 |
-| **DeepSeek V4 Pro** | $1.74 | $3.48 | $0.015 |
-| **Qwen3.7 Plus** (≤256K ctx) | $0.40 | $1.60 | $0.04 |
-| **Qwen3.7 Plus** (>256K ctx) | $1.20 | $4.80 | $0.12 |
-| **DeepSeek V4 Flash** | $0.14 | $0.28 | $0.003 |
-| **MiMo-V2.5** | $0.14 | $0.28 | $0.003 |
+## Quality Gates
 
-> Cache hit rates average **95–96%** across all models, significantly reducing effective cost.
+- **Self-hosted SonarQube (Community edition)** on an Azure VM — see the [`sonarqube-code-analysis`](https://github.com/daryllmagsombol/sonarqube-code-analysis) repo for the deployment setup.
+- **GitHub Actions** — consumer repos run `SonarSource/sonarqube-scan-action@v7` on pull requests; the SonarQube quality gate must pass before merge.
+- Quality-gate workflows are codified in project `AGENTS.md` files (e.g. `pprcv-poc`).
 
-### Token Budget Strategy
+## Appendix — Personal Configuration
 
-| Phase | Model | Approx tokens/req | Monthly reqs | Monthly tokens |
-|-------|-------|-------------------|-------------|----------------|
-| Brainstorming | GLM-5.2 / Kimi K2.7 Code | ~53K cached + ~200 output | 200–400 | ~21M – ~42M |
-| Execution | DeepSeek V4 Pro / Qwen 3.7 Plus | ~83K cached + ~300 output | 1,000–2,000 | ~84M – ~168M |
-| Simple fixes | DeepSeek V4 Flash | ~69K cached + ~280 output | 5,000+ | ~345M+ |
+- **Global config:** `~/.config/opencode/` — `opencode.json` (plugins, MCPs, providers) and `opencode.jsonc` (default agent `orchestrator`, small model `deepseek-v4-flash`, headroom provider).
+- **Providers:** `9router` (local gateway at `localhost:20128`, ~40 models), `omlx` (local MLX at `127.0.0.1:8000`), `headroom` (Claude/GPT via local proxy).
+- **Skills:** superpowers + custom design skills (`ui-ux-pro-max`, `brand`, `design-system`, `slides`, `figma-build`, `figma-codegen`) and cloud skills (`azure-*`).
+- **Serena memories:** active in `portfolio-website`, `pprcv-poc`, `new-transformlit-webapp`, and this repo.
+- **Plugins:** `rtk` rewrites bash commands through `rtk` for token savings.
 
-> **Note:** Project Manager effort estimates reflect **AI effort** (agent compute time), not human effort. This adjusts expectations for task sizing in an AI-driven pipeline.
+## Previous Architecture
 
-## Agents
-
-### 🧠 Team Leader ([`team-leader.md`](team-leader.md))
-**Mode:** primary | **Role:** Primary Developer & Orchestrator | **Model:** DeepSeek V4 Pro
-
-The top-level agent that both writes code directly and coordinates specialized subagents. It understands user requirements, builds features, fixes bugs, and implements code itself — only delegating when specialized input is needed.
-
-**Phase-aware:**
-- From `/brainstorming` — reviews spec, proceeds to implementation (no re-brainstorming)
-- Direct requests — clarifies, then implements or delegates
-
-**Cross-agent synthesis:**
-- When QA finds security bugs → loops in @security-engineer
-- When Security fixes vulns → requests @qa regression tests
-- Resolves conflicts between subagent outputs
-
-**Delegation targets:**
-- `@qa` — Code quality, testing, bug hunting
-- `@security-engineer` — Security audits, dependency auditing, CI/CD hardening
-- `@project-manager` — Large-scope task breakdown, AI effort estimation
-- `@ui-ux-designer` — UI/UX design, design systems, accessibility
-
-### 🧪 QA Engineer ([`qa.md`](qa.md))
-**Mode:** subagent | **Role:** Quality Assurance | **Model:** DeepSeek V4 Pro
-
-Writes tests, reviews code for bugs, analyzes coverage, validates fixes, and ensures best practices for testability.
-
-**Cross-agent:** Escalates security-implicated bugs to @security-engineer; writes regression tests after vulnerability fixes.
-
-### 🔒 Security Engineer ([`security-engineer.md`](security-engineer.md))
-**Mode:** subagent | **Role:** Application + Infrastructure Security | **Model:** DeepSeek V4 Pro
-
-Performs security code reviews, threat modeling, dependency auditing, and checks for OWASP Top 10 vulnerabilities, secrets, and misconfigurations. Also covers CI/CD pipeline hardening, container security, and supply chain auditing.
-
-**Cross-agent:** Shares vulnerability findings with @qa for targeted regression tests.
-
-### 📋 Project Manager ([`project-manager.md`](project-manager.md))
-**Mode:** subagent | **Role:** Planning & Tracking | **Model:** DeepSeek V4 Pro
-
-Breaks down requirements into tasks, estimates **AI effort** (by tool call count, not human hours), identifies dependencies and risks, and tracks progress with status summaries.
-
-### 🎨 UI/UX Designer ([`ui-ux-designer.md`](ui-ux-designer.md))
-**Mode:** subagent | **Role:** Design & Front-End | **Model:** DeepSeek V4 Pro
-
-Creates design systems, responsive layouts, accessible components, and user flows. Covers UI design, UX design, front-end architecture, and accessibility (WCAG 2.1 AA).
-
-**Cross-agent:** Shares new components with @qa for visual regression tests; consults @security-engineer on auth flows and data-sensitive UI patterns.
-
-## Skills
-
-Skills used in this workflow:
-
-- **`/brainstorming`** — Planning & requirement clarification (superpowers-enabled, heavy AI)
-- **`/caveman`** — Ultra-compressed communication during execution to save tokens
-
-## Getting Started
-
-To use these agents in your own OpenCode setup:
-
-1. Clone this repo to `~/.config/opencode/agents/`
-2. Restart OpenCode
-3. Start a session and the Team Leader will be your default agent
-4. Reference subagents with `@` mentions (e.g., `@qa review this code`)
+The v1 setup used a **Team Leader** primary agent with subagents for QA, security, project management, and UI/UX. That pattern is documented in [`old-agents/README.md`](old-agents/README.md) and was replaced by the current thin-orchestrator pattern described above.
 
 ## License
 
