@@ -16,7 +16,7 @@
         ]
       },
       "oracle": {
-        "model": "opencode/glm-5.",
+        "model": "opencode/glm-5.2",
         "variant": "max",
         "skills": [
           "simplify"
