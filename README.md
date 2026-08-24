@@ -91,6 +91,22 @@ How a feature goes from request to merged code:
 
 Agents can be invoked directly with `@agentName <task>`. Model routing is handled by presets — the current preset is **`opencode-go`**, backed by the [OpenCode Go](https://opencode.ai/docs/go/) subscription (flat $10/month, usage caps of $12/5h, $30/week, $60/month).
 
+### Active preset: `opencode-go`
+
+Per-agent model assignments in the current preset (full multi-preset config in [`oh-my-opencode-slim.json`](oh-my-opencode-slim.json)):
+
+| Agent | Model |
+|-------|-------|
+| **orchestrator** | `opencode/minimax-m3` (thinking) |
+| **oracle** | `opencode/glm-5.` (max) |
+| **explorer** | `opencode/deepseek-v4-flash` (high) |
+| **librarian** | `opencode/deepseek-v4-flash` (high) |
+| **designer** | `opencode/kimi-k2.7-code` |
+| **fixer** | `opencode/deepseek-v4-flash` (high) |
+| **observer** | `opencode/mimo-v2.5` |
+
+Other presets available: `opencode-zen-free`, `9router`, `openai`.
+
 ## Planning & Skills
 
 - **Superpowers** — the skill suite used for feature work and complex tasks:

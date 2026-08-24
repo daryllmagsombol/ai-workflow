@@ -1,0 +1,219 @@
+{
+  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "preset": "opencode-go",
+  "disabled_agents": [],
+  "presets": {
+    "opencode-go": {
+      "orchestrator": {
+        "model": "opencode/minimax-m3",
+        "variant": "thinking",
+        "skills": [
+          "*"
+        ],
+        "mcps": [
+          "*",
+          "!context7"
+        ]
+      },
+      "oracle": {
+        "model": "opencode/glm-5.",
+        "variant": "max",
+        "skills": [
+          "simplify"
+        ],
+        "mcps": []
+      },
+      "explorer": {
+        "model": "opencode/deepseek-v4-flash",
+        "variant": "high",
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "opencode/deepseek-v4-flash",
+        "variant": "high",
+        "skills": [],
+        "mcps": [
+          "context7",
+          "gh_grep"
+        ]
+      },
+      "designer": {
+        "model": "opencode/kimi-k2.7-code",
+        "skills": [],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "opencode/deepseek-v4-flash",
+        "variant": "high",
+        "skills": [],
+        "mcps": []
+      },
+      "observer": {
+        "model": "opencode/mimo-v2.5",
+        "skills": [],
+        "mcps": []
+      }
+    },
+    "opencode-zen-free": {
+      "orchestrator": {
+        "model": "opencode/hy3-free",
+        "temperature": 0.4,
+        "skills": [
+          "*"
+        ],
+        "mcps": [
+          "*",
+          "!context7"
+        ]
+      },
+      "oracle": {
+        "model": "opencode/big-pickle",
+        "temperature": 0.4,
+        "variant": "max",
+        "skills": [
+          "simplify"
+        ],
+        "mcps": []
+      },
+      "explorer": {
+        "model": "opencode/deepseek-v4-flash-free",
+        "temperature": 0.2,
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "opencode/deepseek-v4-flash-free",
+        "temperature": 0.2,
+        "skills": [],
+        "mcps": [
+          "context7",
+          "gh_grep"
+        ]
+      },
+      "designer": {
+        "model": "opencode/mimo-v2.5-free",
+        "temperature": 0.3,
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "opencode/laguna-s-2.1-free",
+        "temperature": 0.2,
+        "skills": [],
+        "mcps": []
+      },
+      "observer": {
+        "model": "opencode/mimo-v2.5-free",
+        "temperature": 0.2,
+        "variant": "low",
+        "skills": [],
+        "mcps": []
+      }
+    },
+    "9router": {
+      "orchestrator": {
+        "model": "9router/cmc/deepseek/deepseek-v4-flash",
+        "temperature": 0.4,
+        "skills": [
+          "*"
+        ],
+        "mcps": [
+          "*",
+          "!context7"
+        ]
+      },
+      "oracle": {
+        "model": "cmc/zai-org/GLM-5.3",
+        "temperature": 0.4,
+        "skills": [
+          "simplify"
+        ],
+        "mcps": []
+      },
+      "explorer": {
+        "model": "9router/cmc/deepseek/deepseek-v4-flash",
+        "temperature": 0.2,
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "9router/cmc/deepseek/deepseek-v4-flash",
+        "temperature": 0.2,
+        "skills": [],
+        "mcps": [
+          "context7",
+          "gh_grep"
+        ]
+      },
+      "designer": {
+        "model": "9router/cmc/MiniMaxAI/MiniMax-M3",
+        "temperature": 0.3,
+        "skills": [],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "9router/cmc/meta/muse-spark-1.2-contributor",
+        "temperature": 0.2,
+        "skills": [],
+        "mcps": []
+      },
+      "observer": {
+        "model": "9router/cmc/meta/muse-spark-1.2-contributor",
+        "temperature": 0.2,
+        "variant": "low",
+        "skills": [],
+        "mcps": []
+      }
+    },
+    "openai": {
+      "orchestrator": {
+        "model": "openai/gpt-5.6-terra",
+        "variant": "high",
+        "skills": [
+          "*"
+        ],
+        "mcps": [
+          "*",
+          "!context7"
+        ]
+      },
+      "oracle": {
+        "model": "openai/gpt-5.6-sol",
+        "variant": "high",
+        "skills": [
+          "simplify"
+        ],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "openai/gpt-5.6-luna",
+        "variant": "low",
+        "skills": [],
+        "mcps": [
+          "context7",
+          "gh_grep"
+        ]
+      },
+      "explorer": {
+        "model": "openai/gpt-5.6-luna",
+        "variant": "low",
+        "skills": [],
+        "mcps": []
+      },
+      "designer": {
+        "model": "openai/gpt-5.6-luna",
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "openai/gpt-5.6-luna",
+        "variant": "high",
+        "skills": [],
+        "mcps": []
+      }
+    }
+  }
+}
