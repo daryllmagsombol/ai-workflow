@@ -1,8 +1,7 @@
 # AI-Assisted Coding Workflow
 
-This repo documents my AI-assisted software development workflow, built on the [OpenCode](https://opencode.ai) CLI. It covers the orchestration layer, context and memory tooling, design-to-code pipelines, planning skills, and quality gates.
+This repo documents my AI-assisted software development workflow, developing on the [OpenCode](https://opencode.ai) CLI. It covers the orchestration layer, context and memory tooling, design-to-code pipelines, planning skills, and quality gates.
 
-The architecture has evolved — the v1 "Team Leader" agent pattern is archived in [`old-agents/README.md`](old-agents/README.md) as the previous architecture; this README describes the current setup.
 
 ## Architecture
 
@@ -93,12 +92,12 @@ Agents can be invoked directly with `@agentName <task>`. Model routing is handle
 
 ### Active preset: `opencode-go`
 
-Per-agent model assignments in the current preset (full multi-preset config in [`oh-my-opencode-slim.json`](oh-my-opencode-slim.json)):
+Per-agent model assignments in my current preset (full multi-preset config in [`oh-my-opencode-slim.json`](oh-my-opencode-slim.json)):
 
 | Agent | Model |
 |-------|-------|
 | **orchestrator** | `opencode/minimax-m3` (thinking) |
-| **oracle** | `opencode/glm-5.` (max) |
+| **oracle** | `opencode/glm-5.2` (max) |
 | **explorer** | `opencode/deepseek-v4-flash` (high) |
 | **librarian** | `opencode/deepseek-v4-flash` (high) |
 | **designer** | `opencode/kimi-k2.7-code` |
