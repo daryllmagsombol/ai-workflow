@@ -2,6 +2,8 @@
 
 This repository documents my AI-assisted software engineering workflow. I use [OpenCode](https://opencode.ai) as the primary development environment and a lightweight orchestration layer to delegate exploration, research, architecture, UI, implementation, and visual analysis to specialized agents. AI is heavily involved in development, but changes remain constrained by explicit planning, project context, automated tests, AI review, static analysis, and human approval. The goal is not autonomous coding, but a repeatable engineering system that increases development speed without removing engineering accountability.
 
+This repository documents both the methodology and the technical configuration used to implement it.
+
 ## Scope
 
 This repository documents my current AI-assisted development workflow and configuration. It is a living system rather than a prescriptive framework. Individual projects may use a subset of these agents, tools, models, or quality gates depending on their requirements, technology stack, security constraints, and delivery needs.
@@ -132,7 +134,7 @@ Both pipelines reuse the project's existing components and tokens rather than re
 
 - **OpenCode AI review** — an `anomalyco/opencode/github` action reviews configured pull requests for bugs and security issues, posting a review and failing the gate if actionable problems are found. Reference: [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml).
 - **Self-hosted SonarQube (Community edition)** on an Azure VM — see the [`sonarqube-code-analysis`](https://github.com/daryllmagsombol/sonarqube-code-analysis) repo for the deployment setup.
-- **SonarQube GitHub Action** — runs `SonarSource/sonarqube-scan-action@v7`, waits on the quality gate (`sonar.qualitygate.wait=true`) before merge. Reference: [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml).
+- **SonarQube GitHub Action** — runs `SonarSource/sonarqube-scan-action@v7`, waits for the SonarQube quality gate before the PR can be merged. Reference: [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml).
 - Quality-gate workflows are codified in project `AGENTS.md` files (e.g. `pprcv-poc`) and can be reused across repos.
 
 ## Security & Data Handling
@@ -156,7 +158,7 @@ An Instagram-like social platform (NestJS 11 + Next.js 15, PostgreSQL + Prisma, 
 5. **Implement** — `fixer` adds the bounded change.
 6. **Review** — the OpenCode AI PR reviewer flags a bug or security issue if one exists; the `gate` job blocks merge if bug keywords are found.
 7. **Verify** — `pnpm typecheck` + SonarQube scan (quality gate) run in CI.
-8. **Human** — I review security implications and merge.
+8. **Human** — I review the diff and security implications, then approve and merge.
 
 Real history in this repo includes a rate-limiter bug found by the OpenCode AI PR reviewer, and a GraphQL migration from REST/WebSocket.
 
