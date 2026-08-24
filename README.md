@@ -125,9 +125,10 @@ Both pipelines reuse the project's existing components and tokens rather than re
 
 ## Quality Gates
 
+- **OpenCode AI review** — an `anomalyco/opencode/github` action reviews every PR for bugs and security issues, posting a review and failing the gate if actionable problems are found. Reference: [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml).
 - **Self-hosted SonarQube (Community edition)** on an Azure VM — see the [`sonarqube-code-analysis`](https://github.com/daryllmagsombol/sonarqube-code-analysis) repo for the deployment setup.
-- **GitHub Actions** — consumer repos run `SonarSource/sonarqube-scan-action@v7` on pull requests; the SonarQube quality gate must pass before merge.
-- Quality-gate workflows are codified in project `AGENTS.md` files (e.g. `pprcv-poc`).
+- **SonarQube GitHub Action** — runs `SonarSource/sonarqube-scan-action@v7`, waits on the quality gate (`sonar.qualitygate.wait=true`) before merge. Reference: [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml).
+- Quality-gate workflows are codified in project `AGENTS.md` files (e.g. `pprcv-poc`) and can be reused across repos for further refinement.
 
 ## Appendix — Personal Configuration
 
