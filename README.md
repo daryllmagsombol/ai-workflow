@@ -193,6 +193,8 @@ What happens when the AI gets it wrong:
 | **Serena** (MCP) | Project symbol index + persistent memories | Agents understand a repo without reading everything; `.serena/` per project |
 | **Stitch MCP** | Google Stitch design tool | Translates designs in Stitch into code |
 | **Figwright MCP** | Figma design tool bridge | Translates Figma designs into code; design-system-aware |
+| **Playwright MCP** | Browser automation & E2E | Runtime frontend verification — checks that built UI actually works |
+| **GitHub MCP** | GitHub API bridge (official) | Issues, PRs, workflow runs, and code search in agent context |
 | **context7** (MCP) | Version-specific library documentation | Injects current docs into the context window at query time |
 | **SonarQube** (self-hosted) | Code quality & security analysis | Quality gate via GitHub Actions on pull requests |
 
