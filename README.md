@@ -86,6 +86,8 @@ flowchart TD
     HR --> DONE["Verified & merged"]
 ```
 
+For the development setup to reproduce this workflow on a fresh machine, see [DEV-SETUP.md](DEV-SETUP.md).
+
 ## End-to-End Development Flow
 
 1. **Understand** — the request is clarified (via `/brainstorming` for feature work, or directly for straightforward changes).
