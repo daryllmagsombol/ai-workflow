@@ -1,546 +1,332 @@
-# AI-Assisted Coding Workflow: Learning & Reference
+# AI Coding Workflow — Learning Log
 
-> A living document that captures what I've learned about agentic coding with OpenCode.
-> Built through hands-on reconfiguration of my agent setup.
+> `AGENTS.md` contains active rules. This file records lessons, reasoning, and experiments behind the workflow.
+> Keep it compact and factual. Do not turn it into a second instruction file.
 
----
+## Purpose
 
-## Session 0: Foundation — How OpenCode Works
+Capture:
 
-### What is an AI Coding Agent?
+- recurring workflow lessons
+- patterns that improve output quality
+- failures worth avoiding
+- reasons behind important process changes
 
-An **agent** is a specialized AI persona with:
-- A **role** (what it does)
-- **Permissions** (what tools it can use)
-- A **system prompt** (how it behaves)
-- Optional **model override** (which AI model to use)
+When a lesson becomes a stable, broadly reusable rule, promote it to `AGENTS.md` and record the promotion here.
 
-Think of it like a team member with a job description. You don't ask the QA engineer to design UI, and you don't ask the PM to write code.
+## Workflow Model
 
-### Primary vs Subagent
+A useful default is:
 
-| | Primary | Subagent |
-|---|---|---|
-| **Entry** | Loaded by default when you start a session | Called explicitly via `@name` or by the primary agent |
-| **Role** | Main driver of the conversation | Specialist for a specific domain |
-| **Switching** | Tab key cycles between primary agents | `@mention` in any message |
-| **Example** | `team-leader.md` | `qa.md`, `security-engineer.md` |
-
-### Skills
-
-**Skills** are pre-written instruction files that inject domain expertise. They're like plugins for the agent — loaded on demand when a task matches their domain.
-
-- Skills live in `~/.agents/skills/` or in the superpowers package
-- The AI automatically loads a skill when the task description matches
-- You can also invoke them manually: "Use the brainstorming skill for this"
-
-### Request Flow
-
-```
-You type a request
-       ↓
-Team Leader (primary agent) reads it
-       ↓
-TL decides: "Can I handle this or should I delegate?"
-       ↓
-   ┌────┴────┐
-   ↓         ↓
-Handle     Delegate to subagent (via task tool)
-                   ↓
-            Subagent executes with fresh context
-                   ↓
-            Returns results to TL
-                   ↓
-            TL synthesizes and reports back to you
+```text
+Understand → Inspect → Plan → Research if needed → Delegate → Implement → Review → Verify
 ```
 
-### Tools
+This is adaptive, not mandatory. A trivial change may need only inspect → implement → verify.
 
-Agents don't just talk — they act. Each agent has access to tools:
+### Task classes
 
-| Tool | What it does |
-|------|-------------|
-| `read` | Read file contents |
-| `write` | Create or overwrite files |
-| `edit` | Targeted search-and-replace edits |
-| `bash` | Execute shell commands |
-| `grep` | Search file contents |
-| `glob` | Find files by name patterns |
-| `task` | Dispatch work to subagents |
-| `todowrite` | Track task checklists |
-| `webfetch` | Fetch web pages |
-| `websearch` | Search the internet |
+- **Bounded** — clear scope; proceed after enough inspection.
+- **Architectural** — major or high-risk design; spend more time on tradeoffs before implementation.
+- **Spike** — feasibility/research without automatic implementation.
+- **Bug** — establish failure, find root cause, fix, verify.
+- **UI/design** — reference fidelity and runtime behavior are part of acceptance.
 
-Permissions control which tools an agent can use (`allow`, `ask`, `deny`).
+## Multi-Agent Lessons
 
----
+Parallel specialists are useful when work is genuinely independent.
 
-## Session 1: System Prompt Engineering
+The key constraint is write ownership:
 
-### What is a System Prompt?
-
-The system prompt is the instruction file loaded **before you type anything**. It's the first thing the AI reads in a session. It sets:
-- Who the AI is
-- Who you are
-- How to communicate
-- What process to follow
-- What to avoid
-
-**It is the single highest-leverage edit you can make.** A good system prompt prevents 80% of the problems users hit (inconsistent output, wrong approach, missing context).
-
-### Before and After
-
-**My old AGENTS.md:**
-```markdown
-# Claude-Mem Memory Context
-<claude-mem-context>
-# Memory Context from Past Sessions
-*No context yet. Complete your first session and context will appear here.*
-</claude-mem-context>
+```text
+Agent A → files A/B
+Agent B → files C/D
+Agent C → research/read-only
 ```
 
-This told the AI almost nothing about me or how I want to work.
+Never let two agents edit the same file concurrently.
 
-**My new AGENTS.md:**
-```markdown
-# AI-Assisted Coding Workflow
+Delegation has overhead. Use it when the expected information or implementation value is greater than the coordination cost.
 
-## About the Developer
-- JS/TS developer (rusty but code-literate)
-- Uses OpenCode with custom multi-agent setup
-- Prefers practical examples over theory
+Good specialist outputs contain:
 
-## Default Behavior
-- Be direct and concise — no fluff
-- Before coding non-trivial tasks, explain approach first
-- Default agent: Team Leader
-- Subagents: @qa, @security-engineer, @project-manager, @ui-ux-designer
+- important findings
+- evidence
+- recommendation
+- blockers or uncertainty
 
-## Workflow Defaults
-- Feature work: understand → plan → route → verify → summarize
-- Prefer small, focused files over large ones
-- Use TypeScript strict mode for examples
-- Don't add dependencies unless asked
-- Tests required for feature work
+Avoid returning entire files or repeating unchanged context.
+
+## Evidence Before Assumptions
+
+AI-assisted development fails when plausible guesses are treated as facts.
+
+Prefer:
+
+```text
+Repository evidence
+    ↓
+Project docs/config
+    ↓
+Official/current documentation
+    ↓
+Real-world examples/issues
+    ↓
+Model knowledge
 ```
 
-### The Anatomy of a Good System Prompt
+For version-sensitive behavior, verify it.
 
-1. **Who the developer is** — "JS/TS developer" tells the AI the language and context
-2. **Communication style** — "direct and concise, no fluff" removes emoji-filled responses
-3. **Workflow process** — "explain approach first" prevents the AI from jumping straight to code
-4. **Constraints** — "don't add dependencies" prevents unnecessary npm installs
-5. **Anti-patterns** — implicit: the AI now knows what *not* to do
+When the repository already demonstrates a pattern, prefer that pattern unless there is a reason to change it.
 
-### Key Insight
+## UI / Design Fidelity
 
-> Every time you find yourself correcting the AI's behavior in conversation, ask: **"Should this be in my AGENTS.md?"**
->
-> If you've told the AI "don't use emojis" three times, put it in AGENTS.md. That way it's always loaded, never forgotten.
+A recurring UI failure mode is implementing the idea of a reference rather than the reference itself.
 
----
+When a Figma, Stitch design, screenshot, or mockup exists, inspect:
 
-## Session 2: Agent Definitions & Orchestration
+- hierarchy and layout
+- spacing rhythm
+- typography and line-height
+- colors and semantic tokens
+- borders, radii, elevation
+- icons and imagery
+- interactive states
+- responsive behavior
+- theme variants
 
-### How Agent Files Work
+Then render the UI and compare it with the reference when practical.
 
-Each agent is a `.md` file with YAML frontmatter:
+### Mobile-first
 
-```markdown
----
-description: "One line shown in the agent picker UI"
-mode: primary        # or "subagent"
-color: primary       # UI tag color
-permission:
-  edit: allow        # allow | ask | deny
-  bash: allow
-  glob: allow
-  grep: allow
----
+Start at the smallest supported viewport, then enhance upward.
 
-You are the **Agent Name**.
+Check:
+
+- wrapping
+- horizontal overflow
+- sticky/fixed regions
+- navigation
+- touch targets
+- viewport-height behavior
+- focus/keyboard behavior where relevant
+
+### Token-first
+
+Reuse existing semantic tokens and components before introducing arbitrary values.
+
+A new token should solve a real design-system need, not hide a one-off value.
+
+### Dark mode
+
+Prefer the project's existing theme architecture. Do not invent a second design system just to claim dark mode support.
+
+## Engineering Principles
+
+These are heuristics, not laws.
+
+### YAGNI
+
+Do not build hypothetical future requirements.
+
+### KISS
+
+Prefer code a maintainer can understand quickly.
+
+### DRY
+
+Remove meaningful duplication when there is a stable shared concept. Do not abstract coincidental similarity.
+
+### SOLID
+
+Use when boundaries and responsibilities genuinely reduce complexity. Avoid interfaces, factories, or layers created only to satisfy a principle.
+
+### Composition
+
+Prefer small composable units when they improve reuse and changeability.
+
+### Cohesion and coupling
+
+Keep related behavior together. Make dependencies explicit and intentional.
+
+### Single source of truth
+
+Do not duplicate business rules or state.
+
+### Optimize last
+
+Correctness and clarity first; performance work should be driven by evidence.
+
+## Debugging Lessons
+
+Use:
+
+```text
+Reproduce
+→ Observe
+→ Hypothesize
+→ Test
+→ Fix
+→ Verify
 ```
 
-OpenCode reads these files and registers them as available agents. The `description` field is critical — it's what the AI reads to decide which agent to route to.
+Avoid:
 
-### Permission Design Philosophy
-
-| Permission | Means | Use for |
-|-----------|-------|--------|
-| `allow` | Can use freely | Trusted agents doing their core job |
-| `ask` | Must ask first | Agents that might overstep (orchestrators, reviewers) |
-| `deny` | Cannot use | Read-only agents (PM, planning only) |
-
-**My setup's permission rationale:**
-
-| Agent | edit | bash | Why |
-|-------|------|------|-----|
-| Team Leader | ask | ask | Orchestrator — should route, not build. Asks before doing anything. |
-| QA | allow | allow | Needs to write tests and run them freely. |
-| Security | allow | allow | Needs to patch vulns and run scans without friction. |
-| PM | deny | deny | Pure planning. Should never write code or run commands. |
-| UI/UX | allow | allow | Needs to create components, run builds, check accessibility. |
-
-### The Orchestration Pattern
-
-My setup uses the **Supervisor pattern** (also called orchestrator/subagent):
-
-```
-User → Team Leader (supervisor)
-         ├── @qa (testing/quality)
-         ├── @security-engineer (vulnerability)
-         ├── @project-manager (planning)
-         └── @ui-ux-designer (design)
+```text
+Error
+→ guess
+→ patch
+→ new error
+→ guess again
 ```
 
-The Team Leader:
-1. Receives the user's request
-2. Decides which subagent to invoke (based on task type)
-3. Dispatches work via the `task` tool (fresh context for the subagent)
-4. Receives results and synthesizes them
-5. Reports back to the user
+After repeated failed fixes, reconsider the hypothesis and escalate rather than consuming tokens on increasingly speculative changes.
 
-### Why This Works
+## Verification Lessons
 
-- **Each subagent has a clean context** — no cross-contamination from other tasks
-- **Each subagent has focused tools** — QA has test commands, PM has none
-- **The TL maintains the big picture** — no single agent gets overwhelmed
-- **You can work in parallel** — dispatch research to one agent while another builds
+"Build passes" is not equivalent to "the feature works."
 
-### Agentic Workflow Defined
+Match verification to failure modes:
 
-> **Agentic workflow** = breaking a complex task into discrete steps, with different agents (or the same agent in different phases) handling each step.
+| Change | Useful evidence |
+|---|---|
+| Business logic/types | type check + focused tests |
+| API/data behavior | focused + integration checks |
+| UI behavior | runtime/browser checks |
+| UI visual fidelity | rendered comparison |
+| Responsive layout | multiple viewport checks |
+| Infrastructure | validation/plan + targeted checks |
+| Refactor | existing tests + type/build checks |
 
-Without workflow: "Build a login page" → AI guesses the steps, skips testing, misses edge cases.
+Always distinguish:
 
-With workflow: "Build a login page" → PM plans → TL routes to UI/UX for design → QA tests → Security reviews → TL verifies.
+- caused by the change
+- pre-existing
+- environment/tooling
+- unresolved
 
-The difference is **predictability**. The same process every time → the same quality every time.
+## Memory Lessons
 
----
+Good durable knowledge:
 
-## Session 3: Session Workflow
+- stable architecture decisions
+- non-obvious project conventions
+- recurring integration quirks
+- useful commands
+- known gotchas
+- accepted design decisions
 
-### How to Start a Session
+Avoid storing:
 
-The first message matters more than anything else you type. A structured request gets better results.
+- temporary task state
+- verbose transcripts
+- file contents
+- guesses
+- stale workarounds
+- information obvious from the repository
 
-**Bad start:**
-> "Hey can you help me with something?"
+Promotion heuristic:
 
-The AI now has to guess what you want. Wastes context.
-
-**Good start:**
-> "I need to add cursor-based pagination to the GET /users endpoint in our Express app. It should return 20 items per page, include a cursor in the response, and handle empty results. Uses Prisma. Don't add new dependencies."
-
-The AI now knows: task, scope, constraints, tech stack, and success criteria.
-
-### The Task Decomposition Pattern
-
-For complex work, follow this structure:
-
-1. **State your goal** — one sentence describing the outcome
-2. **Let the AI propose an approach** — "First, tell me if these requirements are clear and how you'd approach this. Don't write code yet."
-3. **Review and approve** — confirm the approach before execution
-4. **Execute in phases** — review after each phase
-5. **Verify** — ask for tests, check the output
-
-```
-Goal → Proposal → Approval → Build Phase 1 → Review → Build Phase 2 → Review → Verify → Done
+```text
+Repeated + reusable + non-obvious → keep
+Otherwise → don't add memory
 ```
 
-### Course-Correction Phrases
+## Skills and Workflow Assets
 
-When the AI goes off track:
+Use the smallest reusable mechanism that solves a recurring problem:
 
-| Situation | Say |
-|-----------|-----|
-| Wrong approach | "Stop. That's not what I meant. Let me rephrase: ..." |
-| Too complex | "Simplify this. I only need X and Y, not Z." |
-| Wrong technology | "Don't use that library. Use the one already in the project." |
-| Missing context | "You're missing [file]. Read it and update your approach." |
-
-### Session Starter Template
-
-Copy-paste this and fill in:
-
-```markdown
-I need to [goal].
-
-Context:
-- [what I'm working on]
-- [what exists already]
-
-Requirements:
-- [requirement 1]
-- [requirement 2]
-
-Constraints:
-- [tech constraint]
-- [anti-pattern to avoid]
-
-First, tell me if my requirements are clear and propose an approach.
-Don't write code until I approve.
+```text
+Existing instruction
+    ↓
+Prompt/config adjustment
+    ↓
+Skill
+    ↓
+Custom agent
+    ↓
+New system complexity
 ```
 
----
+Create a skill when a workflow has stable inputs, repeatable steps, and enough frequency or reliability value to justify maintenance.
 
-## Session 4: Context Management
+Do not create a skill or agent for a one-off task.
 
-### The Context Window Problem
+## Prompt Lessons
 
-AI models have a limited attention span (context window). Even with 200K tokens, conversations get long. Everything you've said and the AI has said takes up space.
+Useful prompts make the objective observable:
 
-**What eats context fast:**
-- Long error traces pasted inline
-- Entire files dumped into the conversation
-- Verbose back-and-forth that could have been a single message
-- AI responses that repeat what you already know
-
-### Strategies
-
-#### 1. Summarize and Restart
-
-When a session gets long (30+ messages), ask:
-
-> "Summarize what we've done and what's pending. I'm going to start a fresh session."
-
-The AI compresses the state into a paragraph. Start a new session with `/session`, paste the summary.
-
-#### 2. Use Files as External Memory
-
-Instead of keeping decisions in conversation, write them down:
-
-- `AGENTS.md` — permanent preferences and workflow rules
-- `CLAUDE.md` or session notes — what was decided in this project
-- `LEARNING.md` — this file! Captures what I've learned
-
-Every word in a file is a word NOT in the context window.
-
-#### 3. Be Concise
-
-- State requirements directly — don't narrate your thinking process
-- Paste file snippets, not entire files (use `read` tool for full files)
-- Use bullet points over paragraphs
-
-#### 4. Use Caveman Mode
-
-Superpowers includes a `caveman` skill that compresses communication. In long sessions, invoke it to save ~75% tokens.
-
-#### 5. Use @mentions for Fresh Context
-
-When you call `@qa`, the subagent starts with a **fresh context** focused only on the task you give it. This is one of the most powerful patterns — you get clean reasoning without historical baggage.
-
-### Context Budget Analogy
-
-> Your session is a suitcase. Every message you send and receive is an item you pack.
->
-> If you pack old conversation junk (verbose back-and-forth, repeated clarifications, full error traces), there's no room for the actual work (code, design decisions, test results).
->
-> Pack light. Use files for storage. Take fresh suitcases (subagents) for each task.
-
----
-
-## Session 5: Prompt Patterns
-
-### The Universal Prompt Structure
-
-Every good prompt follows this pattern:
-
-> **Role + Context + Task + Format + Constraints**
-
-| Element | Purpose | Example |
-|---------|---------|---------|
-| **Role** | Who the AI should act as | "You are a senior TypeScript developer" |
-| **Context** | What exists already | "We have an Express app with Prisma" |
-| **Task** | What to do | "Add cursor pagination to GET /users" |
-| **Format** | How to return the result | "Return the route handler and a JSDoc comment" |
-| **Constraints** | What to avoid | "Don't add new dependencies. Use existing Prisma client" |
-
-### Pattern 1: Feature Work
-
-```
-You are a senior TypeScript developer.
-Context: [current setup, existing code]
-Task: [what to build]
-Format: [how to present the output]
-Constraints: [tech limits, anti-patterns]
+```text
+Goal
+Context
+Constraints
+Acceptance criteria
 ```
 
-**Example:**
-```
-You are a senior TypeScript developer.
-Context: We have an Express + Prisma app. User model exists with id, email, name.
-Task: Add cursor-based pagination to the GET /users endpoint.
-  Return 20 items per page. Cursor is the last user's id.
-  Include `hasMore` boolean in response.
-Format: Export a new route handler. Add JSDoc explaining the pagination params.
-Constraints: Use existing Prisma client. Don't add new dependencies.
-```
+Acceptance criteria are usually more valuable than role-play.
 
-### Pattern 2: Debugging
+Example:
 
-```
-Context: [what's failing, error message]
-Task: Find the root cause and fix it.
-Constraints: Explain the bug before writing the fix. Add a regression test.
-```
+> Match the provided mobile reference, reuse existing design tokens/components, verify at the target viewport, and correct meaningful spacing, typography, and overflow differences.
 
-**Example:**
-```
-Context: The test `test/user.test.ts:42` fails with "Cannot read properties of
-  undefined (reading 'email')". The user object seems malformed.
-  Here's the relevant code: [paste].
-Task: Find the root cause and fix it.
-Constraints: Explain what caused it. Add a regression test that would have caught it.
-```
+## OpenCode Lessons
 
-### Pattern 3: Code Review
+Current OpenCode V2 loads the global `AGENTS.md` plus applicable project/directory `AGENTS.md` files and combines them; it does not automatically resolve conflicting instructions. Keep broad rules global and scoped project rules local.
 
-```
-Context: Review this PR diff [paste].
-Task: Find bugs, security issues, and test gaps.
-Format: For each finding: file:line → problem → fix suggestion.
-Prioritize by severity (critical/high/medium/low).
-```
+OpenCode subagents run in child sessions with fresh context, so focused delegation is useful, but clear handoffs and ownership remain important.
 
-### Pattern 4: Refactoring
+oh-my-opencode-slim exposes dedicated configuration and prompt files for its built-in agents, so agent-specific model routing and specialist prompt tuning belong there rather than being duplicated in this learning file.
 
-```
-Context: This file has grown too large [paste or describe].
-Task: Split it into smaller modules with clear responsibilities.
-Constraints: Don't change the public API. All existing tests must pass.
-  Keep related functions together. Each new file should have one purpose.
-```
+## Promotion Rules
 
-### Why Patterns Work
+Promote a lesson into global `AGENTS.md` only when it is:
 
-Patterns are **repeatable**. Same structure → same quality every time. No luck involved.
+1. broadly useful across projects
+2. repeatedly validated by real work
+3. actionable as an agent behavior
+4. worth the context cost of being loaded globally
 
-When you use a pattern:
-- You don't forget to include context
-- The AI knows exactly what format to return
-- Constraints prevent bad decisions
-- The outcome is predictable
+Otherwise keep it here, in project-level `AGENTS.md`, in project memory, or in a skill.
 
----
+## Applied Lessons
 
-## Session 6: Skill Leverage
+### 2026-09-01 — Global workflow cleanup
 
-### What Skills Are
+Rebuilt the learning document from scratch and separated active rules from historical/reference material.
 
-Skills are pre-written instruction files that inject domain expertise into the AI's context. Think of them as **on-demand experts**.
+Removed from the learning file:
 
-When you start a task that matches a skill:
-1. The skill file is loaded
-2. Its instructions are injected into the AI's context
-3. The AI follows the skill's workflow
+- repeated agent roster/configuration
+- repeated MCP rules
+- generic prompt-template catalog
+- repeated quick-reference tables
+- session-by-session narrative
+- context-window metaphors
+- mandatory approval behavior that should depend on task risk
 
-### When to Use a Skill
+Promoted into global `AGENTS.md`:
 
-| Use a skill when... | Don't use a skill when... |
-|--------------------|---------------------------|
-| Working in an unfamiliar domain | You can describe the approach clearly in one sentence |
-| The skill encodes team best practices | The task is straightforward |
-| You need a step-by-step process for reliability | The skill is about something you've already mastered |
-| The domain has high stakes (security, deployment) | You're experimenting and want flexibility |
+- evidence before invention
+- adaptive workflow
+- concurrent-agent file ownership
+- mobile-first UI
+- reference-driven UI verification
+- token-first design
+- pragmatic YAGNI/KISS/DRY/SOLID
+- root-cause debugging and early escalation
+- risk-based verification
+- memory hygiene
+- Git safety
+- clear completion reporting
 
-### The Golden Path for Feature Work
+### 2026-09-01 — UI fidelity focus
 
-The most important skill chain is:
+The recurring frontend problem is not merely producing functional UI; it is preserving fidelity to Figma, Stitch, screenshots, and the project's design system.
 
-```
-brainstorming → writing-plans → execute
+The global contract therefore treats:
+
+```text
+Reference → Inspect → Map to tokens/components → Implement → Render → Compare → Correct
 ```
 
-1. **brainstorming** — Clarify requirements, explore approaches, document design
-2. **writing-plans** — Break the design into testable, sequential tasks
-3. **execute** — Build it (via subagent-driven development or inline)
-
-Run feature work through this chain every time. It prevents the #1 failure mode: building the wrong thing.
-
-### Your Installed Skills Quick Tour
-
-| Skill | When to use |
-|-------|------------|
-| `brainstorming` | Before any feature work — design first |
-| `writing-plans` | After design approval — create implementation plan |
-| `systematic-debugging` | For any bug — don't guess, follow the process |
-| `test-driven-development` | Before writing feature code — TDD workflow |
-| `caveman` | In long sessions to save token space |
-| `caveman-compress` | Compress memory files when they get large |
-| `find-skills` | Looking for new skills to install |
-| `nestjs-best-practices` | Working on NestJS code |
-| `next-best-practices` | Working on Next.js code |
-| `azure-*` | Working with Azure resources |
-
-### How to Create Your Own Skill
-
-If you find yourself repeating the same instructions, make it a skill:
-
-1. Create a `SKILL.md` in your skills directory
-2. Write the instructions you'd normally repeat
-3. Give it a clear description (so the AI auto-loads it at the right time)
-4. Test it with a real task
-
----
-
-## Quick Reference
-
-### Session Starter Template
-
-```
-I need to [goal].
-
-Context:
-- [what I'm working on]
-- [what exists already]
-
-Requirements:
-- [requirement 1]
-- [requirement 2]
-
-Constraints:
-- [tech constraint]
-- [anti-pattern to avoid]
-
-First, tell me if my requirements are clear and propose an approach.
-Don't write code until I approve.
-```
-
-### Universal Prompt Structure
-
-> **Role + Context + Task + Format + Constraints**
-
-### Agent Delegation Table
-
-| Need | Agent | Permissions |
-|------|-------|-------------|
-| Write tests, review code, find bugs | `@qa` | edit/bash: allow |
-| Security audit, vuln scan, hardening | `@security-engineer` | edit/bash: allow |
-| Task breakdown, estimation, planning | `@project-manager` | edit/bash: deny |
-| UI design, a11y, responsive layout | `@ui-ux-designer` | edit/bash: allow |
-| Orchestration, routing, synthesis | Team Leader (default) | edit/bash: ask |
-
-### Skill Chain for Feature Work
-
-```
-brainstorming → writing-plans → execute
-```
-
-### Context Budget Tips
-
-- Summarize and restart sessions after 30+ messages
-- Use files (AGENTS.md, CLAUDE.md) for external memory
-- Caveman mode when tokens are tight
-- @mentions give each subagent a fresh context
-- One clear first message beats 10 back-and-forth clarifications
-
-### Course-Correction Phrases
-
-| Situation | Say |
-|-----------|-----|
-| Wrong approach | "Stop. Let me rephrase: ..." |
-| Too complex | "Simplify. I only need X." |
-| Wrong tech | "Use the existing library, not a new one." |
-| Missing context | "Read [file] and update your approach." |
+as the preferred UI workflow when a reference exists.

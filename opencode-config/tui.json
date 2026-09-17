@@ -1,5 +1,7 @@
 {
   "plugin": [
-    "oh-my-opencode-slim"
+    "oh-my-opencode-slim",
+    "opencode-cmd-provider",
+    "oc-tps@latest"
   ]
 }

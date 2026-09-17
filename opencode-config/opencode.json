@@ -2,8 +2,63 @@
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
     "superpowers@git+https://github.com/obra/superpowers.git",
-    "oh-my-opencode-slim"
+    "oh-my-opencode-slim",
+    "opencode-cmd-provider",
+    "/Users/daryllmagsombol/.config/opencode/vendor/i-have-adhd/.opencode/plugins/i-have-adhd.mjs"
   ],
-  "model": "opencode/minimax-m3",
-  "provider": {}
+  "model": "opencode/mimo-v2.5-free",
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:CONTEXT7_API_KEY}"
+      }
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": false,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "figwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@figwright/mcp@latest"],
+      "enabled": false
+    },
+    "stitch": {
+      "type": "local",
+      "command": ["npx", "-y", "stitch-mcp-server@latest"],
+      "enabled": true,
+      "environment": {
+        "STITCH_API_KEY": "{env:STITCH_API_KEY}"
+      }
+    },
+    "serena": {
+      "type": "local",
+      "command": ["serena", "start-mcp-server", "--project-from-cwd", "--context=ide"],
+      "enabled": true
+    }
+  },
+  "experimental": {
+    "mcp_timeout": 300000
+  },
+  "agent": {
+    "explore": {
+      "disable": true
+    },
+    "general": {
+      "disable": true
+    }
+  },
+  "lsp": true
 }
