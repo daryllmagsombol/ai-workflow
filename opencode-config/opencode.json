@@ -4,7 +4,7 @@
     "superpowers@git+https://github.com/obra/superpowers.git",
     "oh-my-opencode-slim",
     "opencode-cmd-provider",
-    "/Users/daryllmagsombol/.config/opencode/vendor/i-have-adhd/.opencode/plugins/i-have-adhd.mjs"
+    "~/.config/opencode/vendor/i-have-adhd/.opencode/plugins/i-have-adhd.mjs"
   ],
   "model": "opencode/mimo-v2.5-free",
   "mcp": {

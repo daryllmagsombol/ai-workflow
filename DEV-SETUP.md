@@ -36,15 +36,17 @@ bash <(curl -fsSL https://raw.githubusercontent.com/daryllmagsombol/ai-workflow/
 |----------|-------------|----------------|
 | `opencode.json` / `opencode.jsonc` | `~/.config/opencode/` | repo `opencode-config/` |
 | `AGENTS.md`, `LEARNING.md` | `~/.config/opencode/` | repo `opencode-config/` |
+| `tui.json` | `~/.config/opencode/` | repo `opencode-config/` |
 | `oh-my-opencode-slim.json` | `~/.config/opencode/` | repo root |
 | `skills/` | `~/.config/opencode/skills/` | repo `opencode-config/skills/` |
-| `plugins/rtk.ts` | `~/.config/opencode/plugins/` | repo `opencode-config/plugins/` |
-| `agents/` | `~/.config/opencode/agents/` | repo `opencode-config/agents/` |
+| `plugins/` | `~/.config/opencode/plugins/` | repo `opencode-config/plugins/` |
 
-The configuration pulls two plugins from the network:
+The configuration pulls plugins from the network:
 
 - **superpowers** — planning / TDD / debugging / review skills
 - **oh-my-opencode-slim** — agent orchestration layer
+- **opencode-cmd-provider** — command provider plugin
+- **i-have-adhd** — ADHD-friendly output shaping (installed to `vendor/`)
 
 Plus the `@opencode-ai/plugin` npm dependency used by the `rtk` plugin.
 
@@ -165,8 +167,12 @@ The workflow is global, but context providers are per-project:
 
 - **Serena (MCP)** — run `serena` init in a project to build its symbol index
   and memories (writes `.serena/`).
-- **context7 / GitHub / Playwright MCPs** — already wired in `opencode.json`;
-  just ensure the relevant tokens are present in your environment.
+- **context7** — set `CONTEXT7_API_KEY` in your environment:
+  ```bash
+  export CONTEXT7_API_KEY="your-api-key-here"
+  ```
+- **GitHub** — set `GITHUB_PERSONAL_ACCESS_TOKEN` if you need GitHub MCP.
+- **Stitch** — set `STITCH_API_KEY` if you need Stitch MCP.
 - **Project `AGENTS.md`** — drop a project-specific `AGENTS.md` in any repo to
   scope quality gates and instructions (see `pprcv-poc` for an example).
 
