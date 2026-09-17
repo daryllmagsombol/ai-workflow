@@ -8,8 +8,8 @@
 ## Default Behavior
 - Be direct and concise — no fluff
 - Before coding non-trivial tasks, explain approach first
-- Default agent: Team Leader
-- Subagents: @qa, @security-engineer, @project-manager, @ui-ux-designer
+- Default agent: orchestrator
+- Subagents: explorer, librarian, oracle, designer, fixer, observer
 
 ## Workflow Defaults
 - Feature work: understand → plan → route → verify → summarize

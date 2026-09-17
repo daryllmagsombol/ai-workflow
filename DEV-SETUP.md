@@ -151,7 +151,6 @@ Switch presets by editing `~/.config/opencode/oh-my-opencode-slim.json` →
 |--------|------------------|-------|
 | `opencode-go` | OpenCode Go | Default; paid subscription |
 | `opencode-zen-free` | OpenCode free models | No cost, lower caps |
-| `9router` | Local gateway (`localhost:20128`) | Self-hosted, ~40 models |
 | `openai` | OpenAI | API key required |
 
 If you use a different provider than the default, update the `provider` block in

@@ -142,7 +142,7 @@ Both pipelines reuse the project's existing components and tokens rather than re
 ## Security & Data Handling
 
 - Models are routed through a mix of hosted providers, local gateways, and self-hosted tooling depending on the project.
-- **Local / self-hosted infrastructure** includes `9router` (local model gateway), `oMLX` (local MLX provider), `headroom` (local model proxy), and the self-hosted SonarQube instance.
+- **Local / self-hosted infrastructure** includes `oMLX` (local MLX provider), `headroom` (local model proxy), and the self-hosted SonarQube instance.
 - **No secrets, credentials, or production keys are intentionally supplied to models.** Repository code may be processed by configured model providers and development tools; provider selection can be changed based on project confidentiality requirements, with local/self-hosted routing available for sensitive workloads.
 - Client-specific data-handling requirements take precedence over the default configuration.
 - Per-project `aws` MCP and `azure-*` skills keep cloud operations scoped and auditable.
@@ -200,7 +200,7 @@ What happens when the AI gets it wrong:
 | **context7** (MCP) | Version-specific library documentation | Injects current docs into the context window at query time |
 | **SonarQube** (self-hosted) | Code quality & security analysis | Quality gate via GitHub Actions on pull requests |
 
-> **Also in my stack (not covered in detail here):** `rtk` (token-optimizing bash proxy/plugin), `headroom` (local model proxy), `9router` (local model gateway), `oMLX` (local MLX provider), `graphify` (knowledge-graph skill), `azure-*` skills, and a per-project `aws` MCP.
+
 
 ## Model Routing
 
@@ -234,19 +234,16 @@ Per-agent model assignments (full multi-preset config in [`oh-my-opencode-slim.j
 | **fixer** | `opencode/deepseek-v4-flash` (high) |
 | **observer** | `opencode/mimo-v2.5` |
 
-Other presets available: `opencode-zen-free`, `9router`, `openai`.
+Other presets available: `opencode-zen-free`, `openai`.
 
 ## Workflow Evolution
 
-- **v1 — Heavy hierarchy.** A **Team Leader** primary agent delegated to PM / QA / Security / UI-UX subagents (documented in [`old-agents/README.md`](old-agents/README.md)).
-- **v2 — Thin orchestration.** An orchestrator delegates to specialized, bounded agents (explorer, librarian, oracle, designer, fixer, observer).
-
-**Why:** reduced coordination overhead, simplified responsibilities, and made delegation more predictable. The evolution demonstrates an experimentation-driven approach to multi-agent architecture rather than a static tool install.
+The workflow has evolved from a heavy hierarchy to thin orchestration, reducing coordination overhead and making delegation more predictable. This demonstrates an experimentation-driven approach to multi-agent architecture rather than a static tool install.
 
 ## Appendix — Technical Configuration
 
 - **Global config:** `~/.config/opencode/` — `opencode.json` (plugins, MCPs, providers) and `opencode.jsonc` (default agent `orchestrator`, small model `deepseek-v4-flash`, headroom provider).
-- **Providers:** `9router` (local gateway at `localhost:20128`, ~40 models), `omlx` (local MLX at `127.0.0.1:8000`), `headroom` (Claude/GPT via local proxy).
+- **Providers:** `omlx` (local MLX at `127.0.0.1:8000`), `headroom` (Claude/GPT via local proxy).
 - **Skills:** superpowers + custom design skills (`ui-ux-pro-max`, `brand`, `design-system`, `slides`, `figma-build`, `figma-codegen`) and cloud skills (`azure-*`).
 - **Plugins:** `rtk` rewrites bash commands through `rtk` for token savings.
 - **Reference workflows:** [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml) and [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml), reused across projects for further refinement.
