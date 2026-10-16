@@ -142,7 +142,7 @@ Both pipelines reuse the project's existing components and tokens rather than re
 ## Security & Data Handling
 
 - Models are routed through a mix of hosted providers, local gateways, and self-hosted tooling depending on the project.
-- **Local / self-hosted infrastructure** includes `oMLX` (local MLX provider), `headroom` (local model proxy), and the self-hosted SonarQube instance.
+- **Local / self-hosted infrastructure** includes the self-hosted SonarQube instance; local/self-hosted model gateways can also be configured for sensitive workloads.
 - **No secrets, credentials, or production keys are intentionally supplied to models.** Repository code may be processed by configured model providers and development tools; provider selection can be changed based on project confidentiality requirements, with local/self-hosted routing available for sensitive workloads.
 - Client-specific data-handling requirements take precedence over the default configuration.
 - Per-project `aws` MCP and `azure-*` skills keep cloud operations scoped and auditable.
@@ -190,7 +190,7 @@ What happens when the AI gets it wrong:
 | Tool | Purpose | Role in the flow |
 |------|---------|------------------|
 | **OpenCode CLI** | Terminal AI coding assistant | Hosts agents, skills, MCPs, and providers |
-| **oh-my-opencode-slim** | Agent orchestration plugin for OpenCode | Routes tasks to specialist agents; runs on the `opencode-go` preset |
+| **oh-my-opencode-slim** | Agent orchestration plugin for OpenCode | Routes tasks to specialist agents; runs on the `openai-mixed-optimized` preset |
 | **Superpowers** | Skills suite (planning, TDD, debugging, review) | `/brainstorming` and related skills for feature work and complex tasks |
 | **Serena** (MCP) | Project symbol index + persistent memories | Agents understand a repo without reading everything; `.serena/` per project |
 | **Stitch MCP** | Google Stitch design tool | Translates designs in Stitch into code |
@@ -218,23 +218,36 @@ Agent responsibilities are stable; model assignments are implementation details 
 | **fixer** | Reliable implementation |
 | **observer** | Visual understanding |
 
-### Configuration snapshot (updated August 2026)
+### Configuration snapshot (updated October 2026)
 
-Model assignments are experimental and may change as model quality, latency, and pricing evolve. The workflow is intentionally provider/model-agnostic — designed to remain useful even when models, providers, pricing, or tooling change. This section is intentionally volatile; the methodology and agent responsibilities are more stable than the model assignments. The active preset is **`opencode-go`**, backed by the [OpenCode Go](https://opencode.ai/docs/go/) subscription (flat $10/month, usage caps of $12/5h, $30/week, $60/month).
+Model assignments are experimental and may change as model quality, latency, and pricing evolve. The workflow is intentionally provider/model-agnostic — designed to remain useful even when models, providers, pricing, or tooling change. This section is intentionally volatile; the methodology and agent responsibilities are more stable than the model assignments.
 
-Per-agent model assignments (full multi-preset config in [`oh-my-opencode-slim.json`](oh-my-opencode-slim.json)):
+The active preset is **`openai-mixed-optimized`**, which routes reasoning-heavy work (orchestrator, oracle, designer) to OpenAI models and fast, high-volume work (explorer, librarian, fixer, observer) to CommandCode models. Running it requires credentials for **both** providers: an OpenAI API key and CommandCode access. Anything not configured is simply unavailable; nothing is fetched automatically.
+
+Per-agent model assignments for the active preset (full multi-preset config in [`oh-my-opencode-slim.json`](oh-my-opencode-slim.json)):
 
 | Agent | Model |
 |-------|-------|
-| **orchestrator** | `opencode/minimax-m3` (thinking) |
-| **oracle** | `opencode/glm-5.2` (max) |
-| **explorer** | `opencode/deepseek-v4-flash` (high) |
-| **librarian** | `opencode/deepseek-v4-flash` (high) |
-| **designer** | `opencode/kimi-k2.7-code` |
-| **fixer** | `opencode/deepseek-v4-flash` (high) |
-| **observer** | `opencode/mimo-v2.5` |
+| **orchestrator** | `openai/gpt-6.1-sol` (medium) |
+| **oracle** | `openai/gpt-6.1-sol` (high) |
+| **explorer** | `commandcode/deepseek/deepseek-v4.1-flash` (low) |
+| **librarian** | `commandcode/deepseek/deepseek-v4.1-flash` (medium) |
+| **designer** | `openai/gpt-6.1-sol` (medium) |
+| **fixer** | `commandcode/deepseek/deepseek-v4.1-flash` (high) |
+| **observer** | `commandcode/deepseek/deepseek-v4.1-flash` (low) |
 
-Other presets available: `opencode-zen-free`, `openai`.
+Switch presets by editing the top-level `"preset"` key in `oh-my-opencode-slim.json`:
+
+| Preset | Backing provider(s) | Notes |
+|--------|---------------------|-------|
+| `openai-mixed-optimized` | OpenAI + CommandCode | Default; mixes OpenAI reasoning with CommandCode fast models |
+| `openai` | OpenAI | All agents on OpenAI models |
+| `cmc` | CommandCode | All agents on CommandCode models |
+| `cmc-mimo` | CommandCode | CommandCode MiMo variants |
+| `opencode-go` | OpenCode Go | Paid OpenCode Go subscription |
+| `opencode-zen-free` | OpenCode free models | No cost, lower caps |
+
+Any model ID must resolve through a configured provider — presets that reference `openai/*`, `commandcode/*`, or `opencode/*` models only work once that provider is set up in your local `opencode.json` / provider config.
 
 ## Workflow Evolution
 
@@ -242,10 +255,10 @@ The workflow has evolved from a heavy hierarchy to thin orchestration, reducing 
 
 ## Appendix — Technical Configuration
 
-- **Global config:** `~/.config/opencode/` — `opencode.json` (plugins, MCPs, providers) and `opencode.jsonc` (default agent `orchestrator`, small model `deepseek-v4-flash`, headroom provider).
-- **Providers:** `omlx` (local MLX at `127.0.0.1:8000`), `headroom` (Claude/GPT via local proxy).
-- **Skills:** superpowers + custom design skills (`ui-ux-pro-max`, `brand`, `design-system`, `slides`, `figma-build`, `figma-codegen`) and cloud skills (`azure-*`).
-- **Plugins:** `rtk` rewrites bash commands through `rtk` for token savings.
+- **Global config:** `~/.config/opencode/` — `opencode.json` (plugins, MCPs, agent routing) and `opencode.jsonc` (default agent `orchestrator`). The snapshot deliberately leaves `small_model` unset, letting OpenCode pick a cheaper model automatically (with its built-in fallback) instead of the repo inventing an unqualified model ID. This repository is a sanitized snapshot of the author's live setup; producing it did not modify that live config. Model IDs resolve against providers you configure locally, and the snapshot never embeds provider credentials.
+- **Providers:** configured per preset. The active `openai-mixed-optimized` preset requires OpenAI and CommandCode; set them up in your local `opencode.json` / provider config. Secrets stay local and are never committed.
+- **Skills:** repo-authored skills installed by the installer (`context7-mcp`, `oh-my-opencode-slim`, `simplify`, `codemap`, `clonedeps`, `deepwork`, `reflect`, `verification-planning`, `worktrees`). Externally maintained skill sets are *not* vendored here — install them from their own repositories into your skills root (e.g. `~/.agents/skills/`): [`vercel-labs/agent-skills`](https://github.com/vercel-labs/agent-skills) (`vercel-react-best-practices`), [`vercel-labs/skills`](https://github.com/vercel-labs/skills) (`find-skills`), [`nextlevelbuilder/ui-ux-pro-max-skill`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (`ui-ux-pro-max`), [`JuliusBrussee/caveman`](https://github.com/JuliusBrussee/caveman) (the `caveman-*` suite), and [`mattpocock/skills`](https://github.com/mattpocock/skills).
+- **Plugins:** `superpowers` (git), `opencode-cmd-provider`, and `oh-my-opencode-slim` from `opencode.json`; local plugins `rtk` (rewrites bash commands through `rtk` for token savings) and `commandcode-model-sync` (keeps CommandCode's model catalog current); `i-have-adhd` is vendored at install time and wired into the installed `opencode.json` by the installer.
 - **Reference workflows:** [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml) and [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml), reused across projects for further refinement.
 
 ## License
