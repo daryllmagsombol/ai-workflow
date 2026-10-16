@@ -196,6 +196,45 @@ You should see `orchestrator`, `explorer`, `librarian`, `oracle`, `designer`,
 
 ---
 
+## CI
+
+[`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml)
+(`PR Checks`) runs on pull requests:
+
+- **Config & installer validation** (job and check-run name `typecheck`, kept for
+  branch-protection compatibility): parses the tracked JSON (`opencode.json`,
+  `opencode.jsonc`, `tui.json`, `oh-my-opencode-slim.json`), runs `node --check`
+  on `opencode-config/plugins/commandcode-model-sync.js`, runs `bash -n` +
+  ShellCheck on both `scripts/*.sh`, runs the installer regression suite, runs
+  the CI-review helper tests, and runs the codemap skill tests under Bun.
+- **AI review** (non-fork PRs only): the `anomalyco/opencode/github` action posts
+  its findings as a PR comment ending with an exact `VERDICT: PASS` or
+  `VERDICT: FAIL` line. `OPENCODE_API_KEY` is **optional** — the free model used
+  here works without it. The `gate` job fails on `FAIL` and fails closed if the
+  review cannot run (stale PR head, failed/cancelled action, or a missing,
+  malformed, or ambiguous verdict).
+
+The `gate` job requires the validation job to succeed and the AI review to
+complete successfully (or be skipped on fork PRs) before reporting all clear.
+
+### Optional: SonarQube
+
+[`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml) is opt-in.
+It runs on pushes to `main` / `feature/**` and on manual dispatch, but only when
+the repository variable `ENABLE_SONARQUBE` is `true`. Configure in
+**Settings → Secrets and variables → Actions**:
+
+| Kind | Name | Notes |
+|------|------|-------|
+| Variable | `ENABLE_SONARQUBE` | Set to `true` to enable the scan |
+| Variable | `SONAR_PROJECT_KEY` | SonarQube project key |
+| Secret | `SONAR_HOST_URL` | URL of your SonarQube server |
+| Secret | `SONAR_TOKEN` | Analysis token |
+
+No secret values are committed; set them in repository settings only.
+
+---
+
 ## Troubleshooting
 
 - **`command not found: opencode`** — install OpenCode from https://opencode.ai.

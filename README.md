@@ -97,7 +97,7 @@ For the development setup to reproduce this workflow on a fresh machine, see [DE
 5. **Delegate** — independent lanes are dispatched to specialists in the background.
 6. **Implement** — `fixer` executes well-scoped implementation tasks.
 7. **Review** — OpenCode AI review.
-8. **Verify** — CI tests + SonarQube quality gate.
+8. **Verify** — CI validation (and optional SonarQube quality gate).
 9. **Approve & Ship** — human review, merge, deploy.
 
 ## AI Roles
@@ -134,9 +134,10 @@ Both pipelines reuse the project's existing components and tokens rather than re
 
 ## Quality Gates
 
-- **OpenCode AI review** — an `anomalyco/opencode/github` action reviews configured pull requests for bugs and security issues, posting a review and failing the gate if actionable problems are found. Reference: [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml).
+- **PR validation (`PR Checks`)** — `.github/workflows/opencode-review.yml` checks that the tracked JSON parses, the local plugin passes `node --check`, both installer scripts pass `bash -n` + ShellCheck, the installer regression suite runs, and the codemap skill tests run under Bun. The `gate` job requires this validation to succeed.
+- **OpenCode AI review** — the same workflow runs the `anomalyco/opencode/github` action on non-fork pull requests, posting its findings as a PR comment ending with a `VERDICT: PASS` / `VERDICT: FAIL` line. The gate fails on `FAIL` and fails closed if the review cannot run (a failed action or a missing verdict). Fork PRs skip the review and rely on validation plus human review. Reference: [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml).
 - **Self-hosted SonarQube (Community edition)** on an Azure VM — see the [`sonarqube-code-analysis`](https://github.com/daryllmagsombol/sonarqube-code-analysis) repo for the deployment setup.
-- **SonarQube GitHub Action** — runs `SonarSource/sonarqube-scan-action@v7`, waits for the SonarQube quality gate before the PR can be merged. Reference: [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml).
+- **SonarQube GitHub Action (opt-in)** — `.github/workflows/sonarqube.yml` runs `SonarSource/sonarqube-scan-action@v7` on pushes to `main`/`feature/**` and on manual dispatch, but only when the repository variable `ENABLE_SONARQUBE` is `true`. It needs the `SONAR_HOST_URL` + `SONAR_TOKEN` secrets and a `SONAR_PROJECT_KEY` variable; see [DEV-SETUP](DEV-SETUP.md#ci) for setup.
 - Quality-gate workflows are codified in project `AGENTS.md` files (e.g. `pprcv-poc`) and can be reused across repos.
 
 ## Security & Data Handling
@@ -198,7 +199,7 @@ What happens when the AI gets it wrong:
 | **Playwright MCP** | Browser automation & E2E | Runtime frontend verification — checks that built UI actually works |
 | **GitHub MCP** | GitHub API bridge (official) | Issues, PRs, workflow runs, and code search in agent context |
 | **context7** (MCP) | Version-specific library documentation | Injects current docs into the context window at query time |
-| **SonarQube** (self-hosted) | Code quality & security analysis | Quality gate via GitHub Actions on pull requests |
+| **SonarQube** (self-hosted) | Code quality & security analysis | Opt-in quality gate (`ENABLE_SONARQUBE`) on push / manual dispatch |
 
 
 
