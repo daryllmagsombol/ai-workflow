@@ -64,6 +64,45 @@ jobs:
       - name: Codemap skill tests
         run: bun test opencode-config/skills/codemap/scripts/codemap.test.ts
 
+  # Builds and tests the showcase site on every pull request, including fork
+  # PRs. Uses the repository's own lockfile and a package-owned Playwright
+  # Chromium (never system Chrome); consumes no secrets.
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build showcase site
+        working-directory: site
+        run: npm run build
+
+      - name: Site unit tests
+        working-directory: site
+        run: npm run test:unit
+
+      - name: Install Playwright Chromium
+        working-directory: site
+        run: npx playwright install --with-deps chromium
+
+      - name: Site browser tests
+        working-directory: site
+        run: npm run test:e2e -- --workers=1 --timeout=60000
+
   review:
     if: github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
@@ -220,7 +259,7 @@ jobs:
           esac
 
   gate:
-    needs: [typecheck, review]
+    needs: [typecheck, site, review]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -228,6 +267,12 @@ jobs:
         if: needs.typecheck.result != 'success'
         run: |
           echo "::error::Config/installer validation did not succeed (result: ${{ needs.typecheck.result }})"
+          exit 1
+
+      - name: Site build and tests must pass
+        if: needs.site.result != 'success'
+        run: |
+          echo "::error::Showcase site build/tests did not succeed (result: ${{ needs.site.result }})"
           exit 1
 
       - name: AI review must complete
@@ -243,4 +288,4 @@ jobs:
           exit 1
 
       - name: All checks passed
-        run: echo "✅ Config, installer, and review checks passed"
+        run: echo "✅ Config, installer, site, and review checks passed"

@@ -213,9 +213,53 @@ You should see `orchestrator`, `explorer`, `librarian`, `oracle`, `designer`,
   here works without it. The `gate` job fails on `FAIL` and fails closed if the
   review cannot run (stale PR head, failed/cancelled action, or a missing,
   malformed, or ambiguous verdict).
+- **Showcase site** (job and check-run name `site`): builds and tests the
+  [`site/`](site) app on every PR, including fork PRs — `npm ci` with the
+  committed lockfile, `npm run build`, `npm run test:unit`, a package-owned
+  `playwright install --with-deps chromium`, then `npm run test:e2e`. It uses no
+  secrets, so it runs for forks too.
 
-The `gate` job requires the validation job to succeed and the AI review to
-complete successfully (or be skipped on fork PRs) before reporting all clear.
+The `gate` job requires the validation job and the site job to succeed and the
+AI review to complete successfully (or be skipped on fork PRs) before reporting
+all clear.
+
+### Showcase site (optional)
+
+The site is a static React/Vite/Tailwind/Motion build under `site/`. Run it
+locally:
+
+```bash
+cd site
+npm ci
+npm run build          # tsc -b && vite build && prerender
+npm run test:unit      # content/geometry unit project
+npx playwright install --with-deps chromium   # package-owned browser; never system Chrome
+npm run test:e2e       # browser project against the built site
+```
+
+Browser tests use the Playwright-managed Chromium declared by the package, so no
+system Chrome is required. CI builds and tests the site on every pull request (the
+`site` job above).
+
+**Deployment is opt-in and separate from building.** The target public URL is
+**https://daryllmagsombol.github.io/ai-workflow/** (project subpath `/ai-workflow/`).
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds and retests the
+site on pushes to `main` and on manual dispatch, but its jobs only run when the
+repository variable `ENABLE_SHOWCASE_PAGES` is `true` **and** the run ref is
+`main` (when dispatching manually, select the `main` branch — a tag or other
+branch is rejected by the job guards):
+
+| Kind | Name | Notes |
+|------|------|-------|
+| Variable | `ENABLE_SHOWCASE_PAGES` | Set to `true` to enable the Pages build/deploy |
+
+The workflow uploads only the freshly built `site/dist` from the pushed `main`
+commit; it never deploys pull-request artifacts and never runs on pull requests.
+The repository's Pages source is currently the **legacy branch source**, not
+GitHub Actions. Switching the Pages source to GitHub Actions is a deliberate,
+separately authorized settings change and is **not** performed by this
+repository's code. A green build or CI run is not proof of publication — after an
+authorized deploy, verify the live subpath and its assets directly.
 
 ### Optional: SonarQube
 
