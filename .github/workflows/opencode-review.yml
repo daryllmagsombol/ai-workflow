@@ -120,6 +120,7 @@ jobs:
         with:
           model: opencode/deepseek-v4.1-flash-free
           use_github_token: true
+          share: "false"
           prompt: |
             Review this pull request.
 
