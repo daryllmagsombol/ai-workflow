@@ -37,13 +37,36 @@ for d in skills plugins agents .oh-my-opencode-slim vendor; do
   fi
 done
 
-# i-have-adhd plugin (install from git if vendor not in repo)
+# i-have-adhd plugin (install from git if vendor not already present).
+# Upstream: https://github.com/ayghri/i-have-adhd
 if [ ! -d "$CONF_DIR/vendor/i-have-adhd" ]; then
   echo "==> Installing i-have-adhd plugin"
   mkdir -p "$CONF_DIR/vendor"
-  git clone --depth 1 https://github.com/anthropics/i-have-adhd.git "$CONF_DIR/vendor/i-have-adhd" 2>/dev/null \
+  git clone --depth 1 https://github.com/ayghri/i-have-adhd.git "$CONF_DIR/vendor/i-have-adhd" 2>/dev/null \
     && echo "    installed i-have-adhd" \
     || echo "    warn: i-have-adhd install failed (optional)"
+fi
+
+# Wire the vendored i-have-adhd plugin into the installed config. The entry must
+# be an absolute path into $CONF_DIR, so it is written at install time instead of
+# being committed to the portable snapshot. Idempotent: appended only when the
+# plugin file exists and is not already present.
+IHA_PLUGIN="$CONF_DIR/vendor/i-have-adhd/.opencode/plugins/i-have-adhd.mjs"
+if [ -f "$IHA_PLUGIN" ]; then
+  CFG_FILE="$CONF_DIR/opencode.json" IHA_PLUGIN="$IHA_PLUGIN" node -e '
+    const fs = require("node:fs");
+    const file = process.env.CFG_FILE;
+    const entry = process.env.IHA_PLUGIN;
+    const json = JSON.parse(fs.readFileSync(file, "utf8"));
+    const plugins = Array.isArray(json.plugin) ? json.plugin : (json.plugin = []);
+    if (!plugins.includes(entry)) {
+      plugins.push(entry);
+      fs.writeFileSync(file, JSON.stringify(json, null, 2) + "\n");
+      console.log("    wired i-have-adhd plugin");
+    } else {
+      console.log("    i-have-adhd plugin already wired");
+    }
+  ' || echo "    warn: could not wire i-have-adhd plugin (optional)"
 fi
 
 # rtk plugin dependency

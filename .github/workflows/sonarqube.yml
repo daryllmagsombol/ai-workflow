@@ -1,13 +1,20 @@
 name: SonarQube
 
+# Opt-in static analysis. This repo is configuration and scripts only (no
+# package.json / lockfile), so no pnpm/npm install step is needed. Enable the
+# scan per repository by setting the Actions variable ENABLE_SONARQUBE to
+# "true" (Settings → Secrets and variables → Actions → Variables). The scan also
+# needs the SONAR_HOST_URL, SONAR_TOKEN secrets and a SONAR_PROJECT_KEY variable.
 on:
   push:
     branches:
       - main
       - feature/**
+  workflow_dispatch:
 
 jobs:
   sonarqube:
+    if: vars.ENABLE_SONARQUBE == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -16,22 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v7
         with:
           args: >
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.qualitygate.wait=true
         env:

@@ -1,206 +1,187 @@
 # AI Coding Workflow — Learning Log
 
-> `AGENTS.md` contains active rules. This file records lessons, reasoning, and experiments behind the workflow.
-> Keep it compact and factual. Do not turn it into a second instruction file.
+> `AGENTS.md` contains active behavior rules. This file records lessons, reasoning, and experiments.
+> Keep it compact and do not duplicate the global contract.
 
 ## Purpose
 
-Capture:
+Capture recurring lessons, useful patterns, failure modes, and reasons for workflow changes.
 
-- recurring workflow lessons
-- patterns that improve output quality
-- failures worth avoiding
-- reasons behind important process changes
-
-When a lesson becomes a stable, broadly reusable rule, promote it to `AGENTS.md` and record the promotion here.
+Promote a lesson into `AGENTS.md` only when it is broadly reusable, repeatedly validated, actionable, and worth its global context cost.
 
 ## Workflow Model
-
-A useful default is:
 
 ```text
 Understand → Inspect → Plan → Research if needed → Delegate → Implement → Review → Verify
 ```
 
-This is adaptive, not mandatory. A trivial change may need only inspect → implement → verify.
+Use the lightest path that preserves correctness.
 
-### Task classes
+Task classes:
 
-- **Bounded** — clear scope; proceed after enough inspection.
-- **Architectural** — major or high-risk design; spend more time on tradeoffs before implementation.
-- **Spike** — feasibility/research without automatic implementation.
-- **Bug** — establish failure, find root cause, fix, verify.
-- **UI/design** — reference fidelity and runtime behavior are part of acceptance.
+- **Trivial** — isolated, clear, low risk.
+- **Bounded** — clear scope and outcome.
+- **Architectural** — major/high-risk design.
+- **Spike** — feasibility/research.
+- **Bug** — reproduce → root cause → fix → verify.
+- **UI/design** — reference fidelity + rendered behavior.
+
+## Reliability: Fluency Is Not Evidence
+
+A recurring failure mode is confident fabrication: plausible APIs, commands, file paths, versions, config, or explanations that are not true for the current project.
+
+Use this evidence order:
+
+```text
+Repository/code/config
+→ observed tool/test output
+→ official/current docs
+→ trusted examples/issues
+→ model knowledge
+```
+
+Model knowledge is useful for hypotheses, not silent assumptions.
+
+Before a non-trivial change, verify the facts that drive it:
+
+- target file/path
+- relevant symbols/behavior
+- installed dependency/version
+- scripts/commands
+- config schema
+- API/database contract
+- UI reference details
+
+When evidence is unavailable:
+
+```text
+UNKNOWN → do not invent → conservative action or report blocker
+```
+
+Also remember:
+
+- failed search is not proof of absence
+- another project's setup is not proof of this project's setup
+- current docs may not match the installed version
+- a plausible explanation remains a hypothesis until verified
 
 ## Multi-Agent Lessons
 
-Parallel specialists are useful when work is genuinely independent.
+Parallel agents help when work is genuinely independent.
 
-The key constraint is write ownership:
-
-```text
-Agent A → files A/B
-Agent B → files C/D
-Agent C → research/read-only
-```
-
-Never let two agents edit the same file concurrently.
-
-Delegation has overhead. Use it when the expected information or implementation value is greater than the coordination cost.
-
-Good specialist outputs contain:
-
-- important findings
-- evidence
-- recommendation
-- blockers or uncertainty
-
-Avoid returning entire files or repeating unchanged context.
-
-## Evidence Before Assumptions
-
-AI-assisted development fails when plausible guesses are treated as facts.
-
-Prefer:
+The main safety rule is:
 
 ```text
-Repository evidence
-    ↓
-Project docs/config
-    ↓
-Official/current documentation
-    ↓
-Real-world examples/issues
-    ↓
-Model knowledge
+one writer → one file/symbol ownership boundary
 ```
 
-For version-sensitive behavior, verify it.
+Good orchestration:
 
-When the repository already demonstrates a pattern, prefer that pattern unless there is a reason to change it.
+```text
+exploration + research + visual analysis + isolated implementation
+                         ↓
+                    reconcile
+                         ↓
+                    integrate
+                         ↓
+                    verify
+```
+
+Avoid fake parallelism. Duplicate agents increase token use and reconciliation cost without adding evidence.
+
+Specialists should return findings, evidence, recommendations, and uncertainty—not large file dumps.
 
 ## UI / Design Fidelity
 
-A recurring UI failure mode is implementing the idea of a reference rather than the reference itself.
+The recurring UI problem is implementing the idea of a design rather than the actual reference.
 
-When a Figma, Stitch design, screenshot, or mockup exists, inspect:
+Preferred workflow:
 
-- hierarchy and layout
-- spacing rhythm
-- typography and line-height
-- colors and semantic tokens
-- borders, radii, elevation
-- icons and imagery
-- interactive states
+```text
+Reference → Inspect → Map → Implement → Render → Compare → Correct
+```
+
+When references exist (eg. Figma, Stitch, screenshot, etc.), inspect:
+
+- hierarchy/layout
+- spacing
+- typography
+- colors/tokens
+- borders/radius/elevation
+- icons/images
+- states
 - responsive behavior
 - theme variants
-
-Then render the UI and compare it with the reference when practical.
 
 ### Mobile-first
 
 Start at the smallest supported viewport, then enhance upward.
 
-Check:
-
-- wrapping
-- horizontal overflow
-- sticky/fixed regions
-- navigation
-- touch targets
-- viewport-height behavior
-- focus/keyboard behavior where relevant
+Check wrapping, overflow, navigation, sticky/fixed regions, touch targets, viewport-height behavior, and keyboard/focus behavior when relevant.
 
 ### Token-first
 
-Reuse existing semantic tokens and components before introducing arbitrary values.
+Reuse semantic tokens and existing components first.
 
-A new token should solve a real design-system need, not hide a one-off value.
+Create a new token only when it represents a real reusable design-system concept.
 
 ### Dark mode
 
-Prefer the project's existing theme architecture. Do not invent a second design system just to claim dark mode support.
+Prefer the existing theme architecture. Do not invent a parallel system solely to add dark mode.
 
 ## Engineering Principles
 
 These are heuristics, not laws.
 
-### YAGNI
+**YAGNI** — don't build hypothetical requirements.
 
-Do not build hypothetical future requirements.
+**KISS** — prefer code maintainers can understand quickly.
 
-### KISS
+**DRY** — deduplicate stable concepts, not every repeated line.
 
-Prefer code a maintainer can understand quickly.
+**SOLID** — apply when it reduces real complexity; avoid ceremony.
 
-### DRY
+**Composition** — prefer composable units when useful.
 
-Remove meaningful duplication when there is a stable shared concept. Do not abstract coincidental similarity.
+**Cohesion / coupling** — keep related behavior together and dependencies deliberate.
 
-### SOLID
+**Single source of truth** — avoid duplicated business rules/state.
 
-Use when boundaries and responsibilities genuinely reduce complexity. Avoid interfaces, factories, or layers created only to satisfy a principle.
+**Least surprise** — follow established conventions.
 
-### Composition
+**Optimize last** — optimize from evidence.
 
-Prefer small composable units when they improve reuse and changeability.
-
-### Cohesion and coupling
-
-Keep related behavior together. Make dependencies explicit and intentional.
-
-### Single source of truth
-
-Do not duplicate business rules or state.
-
-### Optimize last
-
-Correctness and clarity first; performance work should be driven by evidence.
+A few repeated lines can be better than a premature abstraction.
 
 ## Debugging Lessons
 
 Use:
 
 ```text
-Reproduce
-→ Observe
-→ Hypothesize
-→ Test
-→ Fix
-→ Verify
+Reproduce → Observe → Hypothesize → Test → Fix → Verify
 ```
 
-Avoid:
+The important lesson is to stop treating a failed hypothesis as fact.
 
-```text
-Error
-→ guess
-→ patch
-→ new error
-→ guess again
-```
-
-After repeated failed fixes, reconsider the hypothesis and escalate rather than consuming tokens on increasingly speculative changes.
+After repeated failed attempts, reconsider the root assumption or escalate. More speculative patches usually consume tokens without increasing confidence.
 
 ## Verification Lessons
 
-"Build passes" is not equivalent to "the feature works."
-
-Match verification to failure modes:
+Different changes require different evidence:
 
 | Change | Useful evidence |
 |---|---|
-| Business logic/types | type check + focused tests |
-| API/data behavior | focused + integration checks |
+| Types/business logic | type check + focused tests |
+| API/data behavior | focused + integration tests |
 | UI behavior | runtime/browser checks |
 | UI visual fidelity | rendered comparison |
-| Responsive layout | multiple viewport checks |
+| Responsive behavior | multiple viewport checks |
 | Infrastructure | validation/plan + targeted checks |
-| Refactor | existing tests + type/build checks |
+| Refactor | existing tests + type/build |
 
 Always distinguish:
 
-- caused by the change
+- caused by this change
 - pre-existing
 - environment/tooling
 - unresolved
@@ -210,20 +191,20 @@ Always distinguish:
 Good durable knowledge:
 
 - stable architecture decisions
-- non-obvious project conventions
+- non-obvious conventions
 - recurring integration quirks
 - useful commands
 - known gotchas
 - accepted design decisions
 
-Avoid storing:
+Avoid:
 
 - temporary task state
-- verbose transcripts
-- file contents
+- transcripts
+- source-code copies
 - guesses
 - stale workarounds
-- information obvious from the repository
+- obvious repository facts
 
 Promotion heuristic:
 
@@ -232,50 +213,31 @@ Repeated + reusable + non-obvious → keep
 Otherwise → don't add memory
 ```
 
-## Skills and Workflow Assets
+## Skills / Workflow Assets
 
-Use the smallest reusable mechanism that solves a recurring problem:
-
-```text
-Existing instruction
-    ↓
-Prompt/config adjustment
-    ↓
-Skill
-    ↓
-Custom agent
-    ↓
-New system complexity
-```
-
-Create a skill when a workflow has stable inputs, repeatable steps, and enough frequency or reliability value to justify maintenance.
-
-Do not create a skill or agent for a one-off task.
-
-## Prompt Lessons
-
-Useful prompts make the objective observable:
+Use the smallest reusable mechanism:
 
 ```text
-Goal
-Context
-Constraints
-Acceptance criteria
+Instruction
+→ prompt/config
+→ skill
+→ custom agent
+→ new system complexity
 ```
 
-Acceptance criteria are usually more valuable than role-play.
+Create a skill when a workflow is repeatable, has stable inputs, and provides meaningful reliability/efficiency value.
 
-Example:
-
-> Match the provided mobile reference, reuse existing design tokens/components, verify at the target viewport, and correct meaningful spacing, typography, and overflow differences.
+Do not create a skill or agent for a one-off problem.
 
 ## OpenCode Lessons
 
-Current OpenCode V2 loads the global `AGENTS.md` plus applicable project/directory `AGENTS.md` files and combines them; it does not automatically resolve conflicting instructions. Keep broad rules global and scoped project rules local.
+OpenCode combines global and applicable project/directory `AGENTS.md` instructions, so global guidance should stay broad and project-specific details should stay local.
 
-OpenCode subagents run in child sessions with fresh context, so focused delegation is useful, but clear handoffs and ownership remain important.
+OpenCode supports reusable subagents as separate profiles; specialist-specific prompts and permissions belong in that configuration layer.
 
-oh-my-opencode-slim exposes dedicated configuration and prompt files for its built-in agents, so agent-specific model routing and specialist prompt tuning belong there rather than being duplicated in this learning file.
+oh-my-opencode-slim supports per-agent prompt append files, skills, and MCP access. That is the right place for specialist-specific behavior rather than duplicating it globally.
+
+Its current background-orchestration model is designed around planning, background specialist dispatch, monitoring, reconciliation, and verification.
 
 ## Promotion Rules
 
@@ -290,43 +252,37 @@ Otherwise keep it here, in project-level `AGENTS.md`, in project memory, or in a
 
 ## Applied Lessons
 
-### 2026-09-01 — Global workflow cleanup
+### 2026-09-24 — Hallucination hardening
 
-Rebuilt the learning document from scratch and separated active rules from historical/reference material.
-
-Removed from the learning file:
-
-- repeated agent roster/configuration
-- repeated MCP rules
-- generic prompt-template catalog
-- repeated quick-reference tables
-- session-by-session narrative
-- context-window metaphors
-- mandatory approval behavior that should depend on task risk
-
-Promoted into global `AGENTS.md`:
+Promoted these global rules:
 
 - evidence before invention
-- adaptive workflow
-- concurrent-agent file ownership
-- mobile-first UI
-- reference-driven UI verification
-- token-first design
-- pragmatic YAGNI/KISS/DRY/SOLID
-- root-cause debugging and early escalation
-- risk-based verification
-- memory hygiene
-- Git safety
-- clear completion reporting
+- explicit verification of paths, symbols, versions, commands, config, contracts, and references
+- unknown remains unknown
+- no fabricated tests/tool use/research/root causes
+- conflicting evidence must be resolved
+- failed lookup is not proof of absence
 
-### 2026-09-01 — UI fidelity focus
+### 2026-09-24 — Orchestration hardening
 
-The recurring frontend problem is not merely producing functional UI; it is preserving fidelity to Figma, Stitch, screenshots, and the project's design system.
+Promoted:
 
-The global contract therefore treats:
+- delegation check before substantial work
+- parallelize meaningful independent lanes
+- explicit writer ownership
+- avoid duplicate background work
+- keep delegation proportional to coordination cost
+
+### 2026-09-24 — UI fidelity hardening
+
+Promoted:
 
 ```text
-Reference → Inspect → Map to tokens/components → Implement → Render → Compare → Correct
+Reference → Inspect → Map → Implement → Render → Compare → Correct
 ```
 
-as the preferred UI workflow when a reference exists.
+with mobile-first, token-first, responsive, accessibility, and runtime verification expectations.
+
+### 2026-09-24 — Separation of concerns
+
+Kept active behavior in `AGENTS.md`; kept rationale and lessons here to reduce global instruction/context duplication.

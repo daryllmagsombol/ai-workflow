@@ -2,9 +2,8 @@
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
     "superpowers@git+https://github.com/obra/superpowers.git",
-    "oh-my-opencode-slim",
     "opencode-cmd-provider",
-    "~/.config/opencode/vendor/i-have-adhd/.opencode/plugins/i-have-adhd.mjs"
+    "oh-my-opencode-slim"
   ],
   "model": "opencode/mimo-v2.5-free",
   "mcp": {
@@ -27,17 +26,29 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@latest"
+      ],
       "enabled": true
     },
     "figwright": {
       "type": "local",
-      "command": ["npx", "-y", "@figwright/mcp@latest"],
+      "command": [
+        "npx",
+        "-y",
+        "@figwright/mcp@latest"
+      ],
       "enabled": false
     },
     "stitch": {
       "type": "local",
-      "command": ["npx", "-y", "stitch-mcp-server@latest"],
+      "command": [
+        "npx",
+        "-y",
+        "stitch-mcp-server@latest"
+      ],
       "enabled": true,
       "environment": {
         "STITCH_API_KEY": "{env:STITCH_API_KEY}"
@@ -45,7 +56,12 @@
     },
     "serena": {
       "type": "local",
-      "command": ["serena", "start-mcp-server", "--project-from-cwd", "--context=ide"],
+      "command": [
+        "serena",
+        "start-mcp-server",
+        "--project-from-cwd",
+        "--context=ide"
+      ],
       "enabled": true
     }
   },
