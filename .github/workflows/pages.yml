@@ -1,0 +1,86 @@
+name: Showcase Pages
+
+# Opt-in deployment for the static showcase site. This workflow does nothing
+# until the repository variable ENABLE_SHOWCASE_PAGES is set to "true"
+# (Settings -> Secrets and variables -> Actions -> Variables).
+#
+# Manual runs must dispatch against the `main` branch: both jobs are guarded by
+# `github.ref == 'refs/heads/main'`, so a tag or any other branch is rejected.
+#
+# It never runs on pull requests and never downloads artifacts produced by a
+# PR. Instead it rebuilds and retests the site from the pushed main commit, so
+# only code that is actually on main can be deployed.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# A single Pages deployment at a time; never cancel an in-flight publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: vars.ENABLE_SHOWCASE_PAGES == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build showcase site
+        working-directory: site
+        run: npm run build
+
+      - name: Site unit tests
+        working-directory: site
+        run: npm run test:unit
+
+      - name: Install Playwright Chromium
+        working-directory: site
+        run: npx playwright install --with-deps chromium
+
+      - name: Site browser tests
+        working-directory: site
+        run: npm run test:e2e -- --workers=1 --timeout=60000
+
+      # Do not enable Pages here: enablement stays a deliberate manual step.
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      # Only the freshly built site is uploaded — never a PR artifact.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    if: vars.ENABLE_SHOWCASE_PAGES == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

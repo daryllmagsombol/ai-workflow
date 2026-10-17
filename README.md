@@ -135,6 +135,7 @@ Both pipelines reuse the project's existing components and tokens rather than re
 ## Quality Gates
 
 - **PR validation (`PR Checks`)** — `.github/workflows/opencode-review.yml` checks that the tracked JSON parses, the local plugin passes `node --check`, both installer scripts pass `bash -n` + ShellCheck, the installer regression suite runs, and the codemap skill tests run under Bun. The `gate` job requires this validation to succeed.
+- **Showcase site (`site` job)** — the same workflow installs the site lockfile, builds the app, runs its unit tests, installs a package-owned Playwright Chromium, and runs the browser tests on every pull request, including fork PRs. The `gate` job requires it to succeed.
 - **OpenCode AI review** — the same workflow runs the `anomalyco/opencode/github` action on non-fork pull requests, posting its findings as a PR comment ending with a `VERDICT: PASS` / `VERDICT: FAIL` line. The gate fails on `FAIL` and fails closed if the review cannot run (a failed action or a missing verdict). Fork PRs skip the review and rely on validation plus human review. Reference: [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml).
 - **Self-hosted SonarQube (Community edition)** on an Azure VM — see the [`sonarqube-code-analysis`](https://github.com/daryllmagsombol/sonarqube-code-analysis) repo for the deployment setup.
 - **SonarQube GitHub Action (opt-in)** — `.github/workflows/sonarqube.yml` runs `SonarSource/sonarqube-scan-action@v7` on pushes to `main`/`feature/**` and on manual dispatch, but only when the repository variable `ENABLE_SONARQUBE` is `true`. It needs the `SONAR_HOST_URL` + `SONAR_TOKEN` secrets and a `SONAR_PROJECT_KEY` variable; see [DEV-SETUP](DEV-SETUP.md#ci) for setup.
@@ -254,13 +255,34 @@ Any model ID must resolve through a configured provider — presets that referen
 
 The workflow has evolved from a heavy hierarchy to thin orchestration, reducing coordination overhead and making delegation more predictable. This demonstrates an experimentation-driven approach to multi-agent architecture rather than a static tool install.
 
+## Showcase Site
+
+[`site/`](site) is a small static showcase — React, Vite, Tailwind CSS, and Motion — that explains this workflow. It is a personal engineering showcase, not a product and not a claim of autonomous delivery. The workflow cycle and an illustrative task walkthrough are presented as static, accessible content with cinematic motion that respects reduced-motion preferences; it does not present performance metrics, testimonials, or simulated results as real data.
+
+When deployment is enabled, the site is published at **https://daryllmagsombol.github.io/ai-workflow/**.
+
+Local commands (from the repository root):
+
+```bash
+cd site
+npm ci
+npm run build          # tsc -b && vite build && prerender
+npm run test:unit      # content/geometry unit project
+npx playwright install --with-deps chromium   # package-owned browser; never system Chrome
+npm run test:e2e       # browser project against the built site
+```
+
+Every pull request builds and tests the site in the `site` job of [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml); the required `gate` check includes it, including on fork PRs.
+
+**Publishing is opt-in and separate from building.** [`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds and retests the site on pushes to `main` and on manual dispatch (manual runs must target the `main` branch; tag or other-branch dispatches are rejected by the job guards), but its jobs only run when the repository variable `ENABLE_SHOWCASE_PAGES` is `true`. It uploads only the freshly built `site/dist` and never deploys pull-request artifacts. The repository's GitHub Pages source is currently the legacy branch source, not GitHub Actions; switching the source to GitHub Actions (and setting `ENABLE_SHOWCASE_PAGES`) requires an explicit, separately authorized decision. A successful build or CI run is **not** proof of publication — verify the live subpath and assets after any authorized deploy.
+
 ## Appendix — Technical Configuration
 
 - **Global config:** `~/.config/opencode/` — `opencode.json` (plugins, MCPs, agent routing) and `opencode.jsonc` (default agent `orchestrator`). The snapshot deliberately leaves `small_model` unset, letting OpenCode pick a cheaper model automatically (with its built-in fallback) instead of the repo inventing an unqualified model ID. This repository is a sanitized snapshot of the author's live setup; producing it did not modify that live config. Model IDs resolve against providers you configure locally, and the snapshot never embeds provider credentials.
 - **Providers:** configured per preset. The active `openai-mixed-optimized` preset requires OpenAI and CommandCode; set them up in your local `opencode.json` / provider config. Secrets stay local and are never committed.
 - **Skills:** repo-authored skills installed by the installer (`context7-mcp`, `oh-my-opencode-slim`, `simplify`, `codemap`, `clonedeps`, `deepwork`, `reflect`, `verification-planning`, `worktrees`). Externally maintained skill sets are *not* vendored here — install them from their own repositories into your skills root (e.g. `~/.agents/skills/`): [`vercel-labs/agent-skills`](https://github.com/vercel-labs/agent-skills) (`vercel-react-best-practices`), [`vercel-labs/skills`](https://github.com/vercel-labs/skills) (`find-skills`), [`nextlevelbuilder/ui-ux-pro-max-skill`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (`ui-ux-pro-max`), [`JuliusBrussee/caveman`](https://github.com/JuliusBrussee/caveman) (the `caveman-*` suite), and [`mattpocock/skills`](https://github.com/mattpocock/skills).
 - **Plugins:** `superpowers` (git), `opencode-cmd-provider`, and `oh-my-opencode-slim` from `opencode.json`; local plugins `rtk` (rewrites bash commands through `rtk` for token savings) and `commandcode-model-sync` (keeps CommandCode's model catalog current); `i-have-adhd` is vendored at install time and wired into the installed `opencode.json` by the installer.
-- **Reference workflows:** [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml) and [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml), reused across projects for further refinement.
+- **Reference workflows:** [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml), [`.github/workflows/pages.yml`](.github/workflows/pages.yml), and [`.github/workflows/sonarqube.yml`](.github/workflows/sonarqube.yml), reused across projects for further refinement.
 
 ## License
 
