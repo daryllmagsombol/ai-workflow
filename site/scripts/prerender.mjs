@@ -13,7 +13,7 @@ try {
   const outlet = '<div id="root"></div>';
   if (!template.includes(outlet)) throw new Error('The prerender outlet is missing.');
   await writeFile(file, template.replace(outlet, `<div id="root">${markup}</div>`));
-  console.log('Prerendered /ai-workflow/ with full readable content.');
+  console.log('Prerendered / with full readable content.');
 } finally {
   await vite.close();
 }

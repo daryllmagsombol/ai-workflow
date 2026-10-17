@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
 const unitOnly = process.argv.includes('--project=unit') || process.argv.some(
   (argument, index) => argument === '--project' && process.argv[index + 1] === 'unit',
 );
-const baseURL = 'http://127.0.0.1:4173/ai-workflow/';
+const baseURL = 'http://127.0.0.1:4173/';
 
 export default defineConfig({
   testDir: './tests',

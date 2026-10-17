@@ -6,7 +6,11 @@ test.use({ javaScriptEnabled: false });
 test('built content remains meaningful with JavaScript disabled', async ({ page }) => {
   const response = await page.goto('./');
   const html = await response!.text();
-  expect(html).toContain('/ai-workflow/assets/');
+  // Custom domain serves at the root: assets must resolve from '/', never a
+  // '/ai-workflow/' project subpath.
+  expect(html).toContain('/assets/');
+  expect(html).toMatch(/(?:src|href)="\/assets\//);
+  expect(html).not.toMatch(/(?:src|href)="\/ai-workflow\//);
   expect(html).not.toMatch(/localhost|\?key=|\.superpowers|\/Users\/|\/var\/folders\//);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('How I build software with AI.');
   await expect(page.locator('.stage-details > summary')).toHaveCount(8);
