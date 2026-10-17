@@ -242,7 +242,7 @@ system Chrome is required. CI builds and tests the site on every pull request (t
 `site` job above).
 
 **Deployment is opt-in and separate from building.** The target public URL is
-**https://daryllmagsombol.github.io/ai-workflow/** (project subpath `/ai-workflow/`).
+**https://ai.darjosh.dev/** (custom domain, served at the root `/`).
 [`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds and retests the
 site on pushes to `main` and on manual dispatch, but its jobs only run when the
 repository variable `ENABLE_SHOWCASE_PAGES` is `true` **and** the run ref is
@@ -255,11 +255,11 @@ branch is rejected by the job guards):
 
 The workflow uploads only the freshly built `site/dist` from the pushed `main`
 commit; it never deploys pull-request artifacts and never runs on pull requests.
-The repository's Pages source is currently the **legacy branch source**, not
-GitHub Actions. Switching the Pages source to GitHub Actions is a deliberate,
-separately authorized settings change and is **not** performed by this
-repository's code. A green build or CI run is not proof of publication — after an
-authorized deploy, verify the live subpath and its assets directly.
+The repository's Pages source is set to **GitHub Actions** with the
+`ENABLE_SHOWCASE_PAGES` variable enabled, so a green `main` build publishes. A
+green build or CI run is not proof of publication by itself — verify the live
+site and its assets directly, and note the custom domain also needs its DNS
+record and TLS certificate in place before it serves.
 
 ### Optional: SonarQube
 

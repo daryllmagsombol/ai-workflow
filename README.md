@@ -259,7 +259,7 @@ The workflow has evolved from a heavy hierarchy to thin orchestration, reducing 
 
 [`site/`](site) is a small static showcase — React, Vite, Tailwind CSS, and Motion — that explains this workflow. It is a personal engineering showcase, not a product and not a claim of autonomous delivery. The workflow cycle and an illustrative task walkthrough are presented as static, accessible content with cinematic motion that respects reduced-motion preferences; it does not present performance metrics, testimonials, or simulated results as real data.
 
-When deployment is enabled, the site is published at **https://daryllmagsombol.github.io/ai-workflow/**.
+The site is published at **https://ai.darjosh.dev/** (custom domain, served at the root).
 
 Local commands (from the repository root):
 
@@ -274,7 +274,7 @@ npm run test:e2e       # browser project against the built site
 
 Every pull request builds and tests the site in the `site` job of [`.github/workflows/opencode-review.yml`](.github/workflows/opencode-review.yml); the required `gate` check includes it, including on fork PRs.
 
-**Publishing is opt-in and separate from building.** [`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds and retests the site on pushes to `main` and on manual dispatch (manual runs must target the `main` branch; tag or other-branch dispatches are rejected by the job guards), but its jobs only run when the repository variable `ENABLE_SHOWCASE_PAGES` is `true`. It uploads only the freshly built `site/dist` and never deploys pull-request artifacts. The repository's GitHub Pages source is currently the legacy branch source, not GitHub Actions; switching the source to GitHub Actions (and setting `ENABLE_SHOWCASE_PAGES`) requires an explicit, separately authorized decision. A successful build or CI run is **not** proof of publication — verify the live subpath and assets after any authorized deploy.
+**Publishing is opt-in and separate from building.** [`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds and retests the site on pushes to `main` and on manual dispatch (manual runs must target the `main` branch; tag or other-branch dispatches are rejected by the job guards), but its jobs only run when the repository variable `ENABLE_SHOWCASE_PAGES` is `true`. It uploads only the freshly built `site/dist` and never deploys pull-request artifacts. The repository's Pages source is set to **GitHub Actions** with `ENABLE_SHOWCASE_PAGES` enabled, so a green `main` build publishes. A successful build or CI run is **not** proof of publication by itself — verify the live site and assets, and note the custom domain also needs its DNS record and TLS certificate in place before it serves.
 
 ## Appendix — Technical Configuration
 
