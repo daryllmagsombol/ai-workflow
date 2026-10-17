@@ -106,7 +106,7 @@ jobs:
   review:
     if: github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       id-token: write
       contents: read
@@ -151,6 +151,9 @@ jobs:
       - name: AI Code Review
         id: ai-review
         uses: anomalyco/opencode/github@v1.17.8
+        # Bound the review so the job always has time left for the strict
+        # verdict check and cleanup instead of being cancelled by the job cap.
+        timeout-minutes: 15
         env:
           # Optional: only needed for paid/authenticated models. The free model
           # used below works without it.
@@ -161,9 +164,27 @@ jobs:
           use_github_token: true
           share: "false"
           prompt: |
-            Review this pull request.
+            Review only this pull request's changes, and stay bounded. Your job
+            is substantive review, not exploration: do not scan unrelated files,
+            install packages, or run the test suite — CI already runs the build,
+            unit, browser, installer, and lint checks separately.
 
-            Read the diff and changed files. Check for:
+            Get the exact changed paths (the PR base is origin/${{ github.base_ref }})
+            and review those files directly:
+
+              git diff --name-only origin/${{ github.base_ref }}...HEAD
+              git diff origin/${{ github.base_ref }}...HEAD -- <specific paths>
+
+            If the output is large, review the changed source and configuration
+            files first, then only the changed hunks that matter.
+
+            Do not review generated or machine-maintained output line by line —
+            for example, do not read site/package-lock.json file by file. Check
+            the dependency manifests (e.g. package.json) and the lockfile only
+            for meaningful dependency changes: unexpected, removed, downgraded,
+            or apparently malicious additions.
+
+            Check for:
             - Bugs and logic errors
             - Security vulnerabilities
             - Missing error handling
